@@ -4,6 +4,8 @@ GRBLweb is a web based GCODE sender and controller for GRBL.  Multiple serial de
 
 Copyright 2014 Andrew Hodel andrewhodel@gmail.com under the GPL v2 license available in this directory.
 
+## raspberry pi
+
 There is a prebuilt Rasbian January 2014 image with GRBLweb already running on it at port 80 for 9600 baud GRBL devices.
 
 The ethernet interface will get a DHCP address that you can ssh to.
