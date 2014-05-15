@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>GRBLweb - web based GCODE sender for GRBL</title>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="main.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">GRBLweb</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+
+<li><button type="button" class="btn btn-danger" style="margin: 10px;" id="sendKill">KILL (ctrl-x)</button></li>
+<li><button type="button" class="btn btn-primary" style="margin: 10px;" id="sendABS">ABS (G90)</button></li>
+<li><button type="button" class="btn btn-primary" style="margin: 10px;" id="sendREL">REL (G91)</button></li>
+<li><button type="button" class="btn btn-primary" style="margin: 10px;" id="sendZero">set 0,0,0 (G92)</button></li>
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar" style="text-align: right;">
+
+<select id="choosePort" class="form-control">
+<option val="no">Select a serial port</option>
+</select>
+
+<h1 id="mStatus"></h1>
+
+<hr />
+
+<h3 id="mX"></h3>
+<h3 id="mY"></h3>
+<h3 id="mZ"></h3>
+
+<hr />
+
+<h3 id="wX"></h3>
+<h3 id="wY"></h3>
+<h3 id="wZ"></h3>
+
+<hr />
+
+<h4 id="qStatus"></h4>
+
+<hr />
+
+w(y+), s(y-), a(x-), d(x+)
+<br />
+up(z+), down(z-)
+
+          </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+<pre style="height: 300px; width: auto; overflow: auto; text-align: left; background-color: #ddd; padding: 10px;" id="console"></pre>
+<br />
+<textarea style="height: 300px; width: 100%; overflow: auto;" id="command"></textarea>
+
+<button type="button" class="btn btn-warning" style="float: right;" id="sendCommand">Send (shift+enter)</button>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>
