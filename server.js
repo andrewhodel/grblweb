@@ -178,28 +178,35 @@ io.sockets.on('connection', function (socket) {
 	// lines from web ui
 	socket.on('gcodeLine', function (data) {
 
-		if (data.line == "\030") {
+		if (typeof currentSocketPort[socket.id] != 'undefined') {
+			// valid serial port selected, safe to send
 
-			// KILL for grbl
-			sp[currentSocketPort[socket.id]].handle.write("\030");
-			// reset vars
-			sp[currentSocketPort[socket.id]].q = [];
-			sp[currentSocketPort[socket.id]].qCurrentMax = 0;
-			sp[currentSocketPort[socket.id]].lastSerialWrite = [];
-			sp[currentSocketPort[socket.id]].lastSerialRealLine = '';
+			if (data.line == "\030") {
 
-		} else {
+				// KILL for grbl
+				sp[currentSocketPort[socket.id]].handle.write("\030");
+				// reset vars
+				sp[currentSocketPort[socket.id]].q = [];
+				sp[currentSocketPort[socket.id]].qCurrentMax = 0;
+				sp[currentSocketPort[socket.id]].lastSerialWrite = [];
+				sp[currentSocketPort[socket.id]].lastSerialRealLine = '';
 
-			console.log('writing to serial: '+data.line);
-			// split newlines
-			var nl = data.line.split("\n");
-			// add to queue
-			sp[currentSocketPort[socket.id]].q = sp[currentSocketPort[socket.id]].q.concat(nl);
-			if (sp[currentSocketPort[socket.id]].q.length == nl.length) {
-				// there was no previous q so write a line
-				sendFirstQ(currentSocketPort[socket.id]);
+			} else {
+
+				console.log('writing to serial: '+data.line);
+				// split newlines
+					var nl = data.line.split("\n");
+				// add to queue
+				sp[currentSocketPort[socket.id]].q = sp[currentSocketPort[socket.id]].q.concat(nl);
+				if (sp[currentSocketPort[socket.id]].q.length == nl.length) {
+					// there was no previous q so write a line
+					sendFirstQ(currentSocketPort[socket.id]);
+				}
+
 			}
 
+		} else {
+			socket.emit('serverError', 'you must select a serial port');
 		}
 
 	});
