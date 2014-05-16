@@ -51,51 +51,48 @@
 
     <div class="container-fluid">
       <div class="row">
-        <div class="col-sm-3 col-md-3 sidebar" style="max-width: 300px;">
+        <div class="col-sm-3 col-md-2 sidebar" style="max-width: 300px;">
 
 <select id="choosePort" class="form-control">
 <option val="no">Select a serial port</option>
 </select>
 
-<h1 id="mStatus">Choose Port</h1>
+<h5 id="mStatus" style="text-align: right;">Choose Port</h5>
+<h5 id="qStatus" style="text-align: right;"></h5>
 
 <hr style="clear: both;" />
 
-<div style="float: right; clear: both; font-size: 40px; margin: 5px;">
-<span style="font-size: .4em; color: #aaa;">mc X</span> <span id="mX" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
+<div style="float: right; clear: both; font-size: 30px; margin: 5px;">
+<span style="font-size: .5em; color: #aaa;">mc X</span> <span id="mX" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
 </div>
-<div style="float: right; clear: both; font-size: 40px; margin: 5px;">
-<span style="font-size: .4em; color: #aaa;">mc Y</span> <span id="mY" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
+<div style="float: right; clear: both; font-size: 30px; margin: 5px;">
+<span style="font-size: .5em; color: #aaa;">mc Y</span> <span id="mY" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
 </div>
-<div style="float: right; clear: both; font-size: 40px; margin: 5px;">
-<span style="font-size: .4em; color: #aaa;">mc Z</span> <span id="mZ" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
-</div>
-
-<hr style="clear: both;" />
-
-<div style="float: right; clear: both; font-size: 40px; margin: 5px;">
-<span style="font-size: .4em; color: #aaa;">work X</span> <span id="wX" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
-</div>
-<div style="float: right; clear: both; font-size: 40px; margin: 5px;">
-<span style="font-size: .4em; color: #aaa;">work Y</span> <span id="wY" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
-</div>
-<div style="float: right; clear: both; font-size: 40px; margin: 5px;">
-<span style="font-size: .4em; color: #aaa;">work Z</span> <span id="wZ" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
+<div style="float: right; clear: both; font-size: 30px; margin: 5px;">
+<span style="font-size: .5em; color: #aaa;">mc Z</span> <span id="mZ" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
 </div>
 
 <hr style="clear: both;" />
 
-<h4 id="qStatus"></h4>
+<div style="float: right; clear: both; font-size: 30px; margin: 5px;">
+<span style="font-size: .5em; color: #aaa;">work X</span> <span id="wX" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
+</div>
+<div style="float: right; clear: both; font-size: 30px; margin: 5px;">
+<span style="font-size: .5em; color: #aaa;">work Y</span> <span id="wY" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
+</div>
+<div style="float: right; clear: both; font-size: 30px; margin: 5px;">
+<span style="font-size: .5em; color: #aaa;">work Z</span> <span id="wZ" style="padding: 4px; border: 2px solid #aaa; background-color: #aaa; font-weight: bold; margin: 0px;">0.000</span>
+</div>
 
 <hr style="clear: both;" />
 
-Step Size: <select class="form-control" id="stepSize">
-<option>.5</option>
-<option selected>1</option>
-<option>2</option>
-<option>5</option>
-<option>10</option>
-<option>20</option>
+<select class="form-control" id="stepSize">
+<option value=".5">Step Size: .5</option>
+<option selected value="1">Step Size: 1</option>
+<option value="2">Step Size: 2</option>
+<option value="5">Step Size: 5</option>
+<option value="10">Step Size: 10</option>
+<option value="20">Step Size: 20</option>
 </select>
 
 <br style="clear: both;" />
@@ -125,7 +122,7 @@ Step Size: <select class="form-control" id="stepSize">
 </button>
 </div>
 
-<div style="float: left; position: relative; top: -20px; margin-left: 20px;">
+<div style="float: left; position: relative; top: -20px; margin-left: 10px;">
 <button type="button" id="zP" class="btn btn-default btn-sm" style="width: 50px;">
   <span class="glyphicon glyphicon-arrow-up"></span> Z+
 </button>
@@ -149,7 +146,7 @@ Step Size: <select class="form-control" id="stepSize">
 
           </ul>
         </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-9 col-md-offset-3 main">
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 
 <pre style="height: 300px; width: auto; overflow: auto; text-align: left; background-color: #ddd; padding: 10px;" id="console"></pre>
 <br />
