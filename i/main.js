@@ -8,6 +8,7 @@ $(document).ready(function() {
 
 	socket.on('ports', function (data) {
 		console.log('ports event',data);
+		$('#choosePort').html('<option val="no">Select a serial port</option>');
 		for (var i=0; i<data.length; i++) {
 			$('#choosePort').append('<option value="'+i+'">'+data[i].comName+':'+data[i].pnpId+'</option>');
 		}
@@ -19,12 +20,12 @@ $(document).ready(function() {
 
 	socket.on('machineStatus', function (data) {
 		$('#mStatus').html(data.status);
-		$('#mX').html('mX: '+data.mpos[0]);
-		$('#mY').html('mY: '+data.mpos[1]);
-		$('#mZ').html('mZ: '+data.mpos[2]);
-		$('#wX').html('wX: '+data.wpos[0]);
-		$('#wY').html('wY: '+data.wpos[1]);
-		$('#wZ').html('wZ: '+data.wpos[2]);
+		$('#mX').html(data.mpos[0]);
+		$('#mY').html(data.mpos[1]);
+		$('#mZ').html(data.mpos[2]);
+		$('#wX').html(data.wpos[0]);
+		$('#wY').html(data.wpos[1]);
+		$('#wZ').html(data.wpos[2]);
 		//console.log(data);
 	});
 
@@ -34,34 +35,40 @@ $(document).ready(function() {
 	});
 
 	$('#choosePort').on('change', function() {
-
 		// select port
 		socket.emit('usePort', $('#choosePort').val());
-
 	})
 
 	$('#sendKill').on('click', function() {
-
 		socket.emit('gcodeLine', { line: "\030"});
-
 	});
 
-	$('#sendABS').on('click', function() {
+	$('#sendGrblHelp').on('click', function() {
+		socket.emit('gcodeLine', { line: '$' });
+	});
 
+	$('#sendGrblSettings').on('click', function() {
+		socket.emit('gcodeLine', { line: '$$' });
+	});
+
+	$('#sendInch').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G20' });
+	});
+
+	$('#sendMm').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G21' });
+	});
+
+	$('#sendAbs').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G90' });
-
 	});
 
-	$('#sendREL').on('click', function() {
-
+	$('#sendRel').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91' });
-
 	});
 
 	$('#sendZero').on('click', function() {
-
 		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
-
 	});
 
 	$('#sendCommand').on('click', function() {
@@ -84,36 +91,85 @@ $(document).ready(function() {
 		}
 	});
 
+	$('#xM').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G0 X-'+$('#stepSize').val()});
+	});
+	$('#xP').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G0 X'+$('#stepSize').val()});
+	});
+	$('#yP').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G0 Y'+$('#stepSize').val()});
+	});
+	$('#yM').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G0 Y-'+$('#stepSize').val()});
+	});
+	$('#zP').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G0 Z'+$('#stepSize').val()});
+	});
+	$('#zM').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G0 Z-'+$('#stepSize').val()});
+	});
+
 	// WASD and up/down keys
 	$(document).keydown(function (e) {
 		var keyCode = e.keyCode || e.which;
 
+		if ($('#command').is(':focus')) {
+			// don't handle keycodes inside command window
+			return;
+		}
+
 		switch (keyCode) {
 		case 65:
 			// a key X-
-			socket.emit('gcodeLine', { line: 'G0 X-1'});
+			e.preventDefault();
+			$('#xM').click();
 			break;
 		case 68:
 			// d key X+
-			socket.emit('gcodeLine', { line: 'G0 X1'});
+			e.preventDefault();
+			$('#xP').click();
 			break;
 		case 87:
 			// w key Y+
-			socket.emit('gcodeLine', { line: 'G0 Y1'});
+			e.preventDefault();
+			$('#yP').click();
 			break;
 		case 83:
 			// s key Y-
-			socket.emit('gcodeLine', { line: 'G0 Y-1'});
+			e.preventDefault();
+			$('#yM').click();
 			break;
 		case 38:
 			// up arrow Z+
-			socket.emit('gcodeLine', { line: 'G0 Z1'});
+			e.preventDefault();
+			$('#zP').click();
 			break;
 		case 40:
 			// down arrow Z-
-			socket.emit('gcodeLine', { line: 'G0 Z-1'});
+			e.preventDefault();
+			$('#zM').click();
 			break;
 		}
 	});
+
+	// handle gcode uploads
+	if (window.FileReader) {
+		function dragEvent (ev) {
+			ev.stopPropagation (); 
+			ev.preventDefault ();
+			if (ev.type == 'drop') {
+				var reader = new FileReader ();
+				reader.onloadend = function (ev) { document.getElementById('command').value = this.result; };
+				reader.readAsText (ev.dataTransfer.files[0]);
+			}  
+		}
+
+		document.getElementById('command').addEventListener ('dragenter', dragEvent, false);
+		document.getElementById('command').addEventListener ('dragover', dragEvent, false);
+		document.getElementById('command').addEventListener ('drop', dragEvent, false);
+	} else {
+		alert('your browser is too old to upload files, get the latest Chromium or Firefox');
+	}
 
 });
