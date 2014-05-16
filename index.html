@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Grblweb by andrewhodel</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/andrewhodel/grblweb">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/andrewhodel/grblweb/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/andrewhodel/grblweb/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Grblweb</h1>
+          <p>web based gcode sender for grbl</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/andrewhodel">andrewhodel</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h2>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h2>
+
+<p>GRBLweb is a web based GCODE sender and controller for GRBL.  Multiple serial devices can be connected to control multiple machines.</p>
+
+<p>Copyright 2014 Andrew Hodel <a href="mailto:andrewhodel@gmail.com">andrewhodel@gmail.com</a> under the GPL v2 license available in this directory.</p>
+
+<h2>
+<a name="raspberry-pi-prebuilt-image" class="anchor" href="#raspberry-pi-prebuilt-image"><span class="octicon octicon-link"></span></a>Raspberry Pi prebuilt Image</h2>
+
+<p>There is a prebuilt Rasbian image with GRBLweb already running on it at port 80 for 9600 baud GRBL devices.</p>
+
+<p>The ethernet interface will get a DHCP address that you can ssh to.</p>
+
+<p>username: pi</p>
+
+<p>password: password</p>
+
+<h2>
+<a name="grbl-reading" class="anchor" href="#grbl-reading"><span class="octicon octicon-link"></span></a>GRBL Reading</h2>
+
+<p><a href="https://github.com/grbl/grbl">https://github.com/grbl/grbl</a></p>
+
+<p><a href="https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8">https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8</a></p>
+
+<p><a href="http://onehossshay.wordpress.com/2011/08/21/grbl-how-it-works-and-other-thoughts/">http://onehossshay.wordpress.com/2011/08/21/grbl-how-it-works-and-other-thoughts/</a></p>
+
+<h2>
+<a name="config" class="anchor" href="#config"><span class="octicon octicon-link"></span></a>Config</h2>
+
+<p>edit config.js to change serial baud rate and web port</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>npm install node-static serialport socket.io
+npm install -g forever
+</code></pre>
+
+<h2>
+<a name="running" class="anchor" href="#running"><span class="octicon octicon-link"></span></a>Running</h2>
+
+<p>// standalone</p>
+
+<pre><code>cd grblweb
+node server.js
+</code></pre>
+
+<p>// with forever</p>
+
+<pre><code>npm install -g forever
+cd grblweb
+forever start server.js
+</code></pre>
+
+<h2>
+<a name="access" class="anchor" href="#access"><span class="octicon octicon-link"></span></a>Access</h2>
+
+<p>The default port in config.js is 8000, you can change it by editing the file.</p>
+
+<p>http://hostaddress:8000/</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
