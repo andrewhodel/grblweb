@@ -9,7 +9,7 @@ $(document).ready(function() {
 	socket.on('ports', function (data) {
 		console.log('ports event',data);
 		for (var i=0; i<data.length; i++) {
-			$('#choosePort').append('<option value="'+i+'">'+data[i].comName+'</option>');
+			$('#choosePort').append('<option value="'+i+'">'+data[i].comName+':'+data[i].pnpId+'</option>');
 		}
 	});
 

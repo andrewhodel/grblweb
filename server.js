@@ -51,16 +51,18 @@ serialport.list(function (err, ports) {
 
 		sp[i].handle.on("open", function() {
 
-		// line from serial port
-		sp[i].handle.on("data", function (data) {
-			serialData(data, i);
-		});
+			console.log('connected to '+sp[i].port+' at '+config.serialBaudRate);
 
-		// loop for status ?
-		setInterval(function() {
-			// write ? always, to catch it
-			sp[i].handle.write('?'+"\n");
-		}, 400);
+			// line from serial port
+			sp[i].handle.on("data", function (data) {
+				serialData(data, i);
+			});
+
+			// loop for status ?
+			setInterval(function() {
+				// write ? always, to catch it
+				sp[i].handle.write('?'+"\n");
+			}, 400);
 
 		});
 
