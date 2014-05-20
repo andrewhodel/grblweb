@@ -7,7 +7,7 @@ $(document).ready(function() {
 	});
 
 	socket.on('ports', function (data) {
-		console.log('ports event',data);
+		//console.log('ports event',data);
 		$('#choosePort').html('<option val="no">Select a serial port</option>');
 		for (var i=0; i<data.length; i++) {
 			$('#choosePort').append('<option value="'+i+'">'+data[i].comName+':'+data[i].pnpId+'</option>');
@@ -155,11 +155,14 @@ $(document).ready(function() {
 
 	// handle gcode uploads
 	if (window.FileReader) {
+
+		var reader = new FileReader ();
+
+		// drag and drop
 		function dragEvent (ev) {
 			ev.stopPropagation (); 
 			ev.preventDefault ();
 			if (ev.type == 'drop') {
-				var reader = new FileReader ();
 				reader.onloadend = function (ev) { document.getElementById('command').value = this.result; };
 				reader.readAsText (ev.dataTransfer.files[0]);
 			}  
@@ -168,6 +171,14 @@ $(document).ready(function() {
 		document.getElementById('command').addEventListener ('dragenter', dragEvent, false);
 		document.getElementById('command').addEventListener ('dragover', dragEvent, false);
 		document.getElementById('command').addEventListener ('drop', dragEvent, false);
+
+		// button
+		var fileInput = document.getElementById('fileInput');
+		fileInput.addEventListener('change', function(e) {
+			reader.onloadend = function (ev) { document.getElementById('command').value = this.result; };
+			reader.readAsText (fileInput.files[0]);
+		});
+
 	} else {
 		alert('your browser is too old to upload files, get the latest Chromium or Firefox');
 	}

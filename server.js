@@ -43,11 +43,15 @@ serialport.list(function (err, ports) {
 		sp[i].qCurrentMax = 0;
 		sp[i].lastSerialWrite = [];
 		sp[i].lastSerialReadLine = '';
+		// 1 means clear to send, 0 means waiting for response
+		sp[i].canQuestion = 1;
 		sp[i].handle = new SerialPort(ports[i].comName, {
 			parser: serialport.parsers.readline("\n"),
 			baudrate: config.serialBaudRate
 		});
 		sp[i].sockets = [];
+		// flag for first init
+		sp[i].ready = 0;
 
 		sp[i].handle.on("open", function() {
 
@@ -60,9 +64,14 @@ serialport.list(function (err, ports) {
 
 			// loop for status ?
 			setInterval(function() {
-				// write ? always, to catch it
-				sp[i].handle.write('?'+"\n");
-			}, 400);
+				// if canQuestion is valid or it's a reset
+				if (sp[i].canQuestion == 1 && sp[i].ready == 1) {
+					// only write if we've got a response for the last one
+					// console.log('writing ? to serial');
+					sp[i].canQuestion = 0;
+					sp[i].handle.write('?');
+				}
+			}, 200);
 
 		});
 
@@ -82,7 +91,6 @@ function serialData(data, port) {
 	// handle ?
 	if (data.indexOf('<') == 0) {
 		// https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8#---current-status
-		// this is the first of 2 lines for a ? request
 
 		// remove first <
 		var t = data.substr(1);
@@ -95,15 +103,19 @@ function serialData(data, port) {
 
 		emitToPortSockets(port, 'machineStatus', {'status':t[0], 'mpos':[t[2], t[3], t[4]], 'wpos':[t[6], t[7], t[8]]});
 
-	} else if (sp[port].lastSerialReadLine.indexOf('<') == 0 && data.indexOf('ok') == 0) {
-		// this is the second of 2 lines for a ? request
+		sp[port].canQuestion = 1;
+		//console.log('canQuestion again, got valid ? response');
 
 		// run another line from the q
 		if (sp[port].q.length > 0) {
 			// there are remaining lines in the q
 			// write one
-			sendFirstQ(port);
+			//sendFirstQ(port);
 		}
+
+	} else if (data.indexOf('Grbl') == 0) {
+		// this is a valid init
+		sp[port].ready = 1;
 
 	} else {
 
