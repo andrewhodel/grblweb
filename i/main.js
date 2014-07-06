@@ -1,5 +1,10 @@
 $(document).ready(function() {
 
+	$( window ).resize(function() {
+		// when header resizes, move ui down
+		$('.table-layout').css('margin-top',$('.navbar-collapse').height()-34);
+	});
+
 	var socket = io.connect('');
 
 	socket.on('serverError', function (data) {

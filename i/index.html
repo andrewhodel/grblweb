@@ -17,6 +17,24 @@
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
 <link rel="stylesheet" href="dashboard.css">
+
+<style type="text/css">
+.table-layout {
+    display:table;
+    width:100%;
+    margin-top: 20px;
+}
+.table-layout .table-cell {
+    display:table-cell;
+    vertical-align: top;
+    padding: 10px;
+}
+
+.fixed-width-cell {
+    width:250px;
+}
+</style>
+
 </head>
 
 <body>
@@ -49,9 +67,15 @@
       </div>
     </div>
 
+<!--
+
     <div class="container-fluid">
       <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar" style="max-width: 300px;">
+        <div class="col-sm-3 col-md-2 sidebar">
+-->
+    <div class="container-fluid">
+      <div class="table-layout">
+        <div class="table-cell fixed-width-cell">
 
 <select id="choosePort" class="form-control">
 <option val="no">Select a serial port</option>
@@ -143,7 +167,8 @@
 
           </ul>
         </div>
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <!--<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">-->
+        <div class="table-cell">
 
 <pre style="height: 300px; width: auto; overflow: auto; text-align: left; background-color: #ddd; padding: 10px;" id="console"></pre>
 <br />

@@ -55,3 +55,9 @@ forever start server.js
 The default port in config.js is 8000, you can change it by editing the file.
 
 http://hostaddress:8000/
+
+## Enable /dev/ttyAMA0 on rPi
+
+Read http://www.hobbytronics.co.uk/raspberry-pi-serial-port
+
+This is already enabled on the prebuilt GRBLweb Raspbian image.
