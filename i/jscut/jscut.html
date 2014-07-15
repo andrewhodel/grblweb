@@ -1,0 +1,447 @@
+<!--
+Copyright 2014 Todd Fleming
+
+This file is part of jscut.
+
+jscut is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+jscut is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with jscut.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>jscut</title>
+    <link href="lib/bootstrap-3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/bootstrap-slider.min.css" rel="stylesheet">
+    <link href="jscut.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Save Settings Modal -->
+    <div class="modal fade" id="save-settings-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Save Settings
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input id="SaveSettings1" data-bind="value: saveSettingsFilename">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettingsGoogle(function () { $('#save-settings-modal').modal('hide') })">Google Drive</button>
+                    <a id="SaveSettings2" class="btn btn-primary" href="#" target="_blank" data-bind="attr:{href:saveSettingsUrl()}">Get</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save GCODE Modal -->
+    <div class="modal fade" id="save-gcode-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Save GCODE
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input id="FileGetGcode1" data-bind="value: gcodeFilename">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveGcodeGoogle(function () { $('#save-gcode-modal').modal('hide') })">Google Drive</button>
+                    <!-- <button type="button" class="btn btn-primary" onclick="chiliSaveGcode()">ChiliPeppr</button> -->
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="grblWebSaveGcode()">GRBLweb (autoload)</button>
+                    <a id="FileGetGcode2" class="btn btn-primary" target="_blank" data-bind="attr:{href:gcodeUrl()}">Get</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Launch ChiliPeppr Modal -->
+    <div class="modal fade" id="launch-chilipeppr-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Save GCODE
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    gcode saved to chilipeppr.com.
+                </div>
+                <div class="modal-footer">
+                    <a id="LaunchChiliPeppr" class="btn btn-primary" href="#" target="_blank" data-bind="attr:{href:launchChiliUrl()}">Launch ChiliPeppr TinyG</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container-fluid">
+        <!-- Begin page content -->
+        <div class="row">
+            <!-- left -->
+            <div class="col-sm-3 left-column">
+                <!-- operations -->
+                <div class="panel panel-default" id="Operations">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseOperations">Operations</a>
+                        </h3>
+                    </div>
+                    <div id="collapseOperations" class="panel-collapse collapse in">
+                        <div class="panel-body">
+                            <table class="table">
+                                <tr>
+                                    <td><label for="pxPerInch">px per inch</label>
+                                    <td><input type="number" id="pxPerInch" data-bind="value: svgViewModel.pxPerInch">
+                            </table>
+                            <div style="display: inline-block">
+                                <button id="createOperationButton" class="btn btn-default" data-bind="click: addOperation, enable:selectionViewModel.selNumSelected()>0">Create Operation</button>
+                            </div>
+                        </div>
+                        <table class="table">
+                            <tbody data-bind="foreach: operations">
+                                <tr>
+                                    <td><input type="radio" data-bind="checked: selected" /></td>
+                                    <td><input type="checkbox" data-bind="checked: enabled" /></td>
+                                    <td>
+                                        <select data-bind="value: combineOp">
+                                            <option>Union</option>
+                                            <option>Intersect</option>
+                                            <option>Diff</option>
+                                            <option>Xor</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select data-bind="value: camOp">
+                                            <option>Pocket</option>
+                                            <option>Inside</option>
+                                            <option>Outside</option>
+                                            <option>Engrave</option>
+                                        </select>
+                                    </td>
+                                    <td><a href="#" data-bind="click: generateToolPath">Generate</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- tool -->
+                <div class="panel panel-default" id="Tool">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseTool">Tool (shared for all operations)</a>
+                        </h3>
+                    </div>
+                    <div id="collapseTool" class="panel-collapse collapse in">
+                        <div class="panel-body">
+                            <table class="table">
+                                <tr>
+                                    <td><label class="control-label">Units</label>
+                                    <td><select data-bind="value: units"><option>inch<option>mm</select>
+                                <tr>
+                                    <td><label class="control-label">Diameter</label>
+                                    <td><span data-bind="text: units"></span>
+                                    <td><input type="number" data-bind="value: diameter">
+                                <tr>
+                                    <td><label class="control-label">Pass Depth</label>
+                                    <td><span data-bind="text: units"></span>
+                                    <td><input type="number" data-bind="value: passDepth">
+                                <tr>
+                                    <td><label class="control-label">Overlap</label>
+                                    <td>[0, 1)
+                                    <td><input type="number" data-bind="value: overlap">
+                                <tr>
+                                    <td><label class="control-label">Rapid</label>
+                                    <td><span data-bind="text: units"></span>/min
+                                    <td><input type="number" data-bind="value: rapidRate">
+                                <tr>
+                                    <td><label class="control-label">Plunge</label>
+                                    <td><span data-bind="text: units"></span>/min
+                                    <td><input type="number" data-bind="value: plungeRate">
+                                <tr>
+                                    <td><label class="control-label">Cut</label>
+                                    <td><span data-bind="text: units"></span>/min
+                                    <td><input type="number" data-bind="value: cutRate">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- Operation -->
+                <div data-bind="with: selectedOperation" id="Operation">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOperation">Selected Operation</a>
+                            </h3>
+                        </div>
+                        <div id="collapseOperation" class="panel-collapse collapse in">
+                            <div class="panel-body">
+                                <table class="table">
+                                    <tr><td><td><td><a href="#" data-bind="click: generateToolPath">Generate Toolpath</a>
+                                    <tr><td><td><td><a href="#" data-bind="click: $root.removeOperation">Delete Operation</a>
+                                    <tr>
+                                        <td><label class="control-label">Visible</label>
+                                        <td>
+                                        <td><input type="checkbox" data-bind="checked: enabled" />
+                                    <tr>
+                                        <td><label class="control-label">Ramp Plunge</label>
+                                        <td>
+                                        <td><input type="checkbox" data-bind="checked: ramp" />
+                                    <tr>
+                                        <td><label class="control-label">Combine</label>
+                                        <td>
+                                        <td>
+                                            <select data-bind="value: combineOp">
+                                                <option>Union</option>
+                                                <option>Intersect</option>
+                                                <option>Diff</option>
+                                                <option>Xor</option>
+                                            </select>
+                                    <tr>
+                                        <td><label class="control-label">Operation</label>
+                                        <td>
+                                        <td>
+                                            <select data-bind="value: camOp">
+                                                <option>Pocket</option>
+                                                <option>Inside</option>
+                                                <option>Outside</option>
+                                                <option>Engrave</option>
+                                            </select>
+                                    <tr>
+                                        <td><label class="control-label">Direction</label>
+                                        <td>
+                                        <td>
+                                            <select data-bind="value: direction">
+                                                <option>Conventional</option>
+                                                <option>Climb</option>
+                                            </select>
+                                    <tr>
+                                        <td><label class="control-label">Units</label>
+                                        <td>
+                                        <td><select data-bind="value: units"><option>inch<option>mm</select>
+                                    <tr>
+                                        <td><label class="control-label">Cut Depth</label>
+                                        <td><span data-bind="text: units" />
+                                        <td><input type="number" data-bind="value: cutDepth">
+                                    <tr data-bind="visible: camOp()!='Engrave'">
+                                        <td><label class="control-label">Margin</label>
+                                        <td><span data-bind="text: units" />
+                                        <td><input type="number" data-bind="value: margin">
+                                    <tr data-bind="visible: camOp()=='Inside' || camOp()=='Outside'">
+                                        <td><label class="control-label">Width</label>
+                                        <td><span data-bind="text: materialViewModel.matUnits" />
+                                        <td><input type="number" data-bind="value: width">
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- center -->
+            <div id="MainSvgDiv" class="col-sm-6">
+                <nav class="navbar navbar-default" role="navigation">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button> <a class="navbar-brand" href="index.html" target="_blank">jscut</a>
+                    </div>
+
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Open SVG<strong class="caret"></strong></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="choose-file">Local<input type="file" id="choose-svg-file" multiple></a></li>
+                                    <li><a href="#" onclick="openSvgGoogle()">Google Drive</a></li>
+                                    <li><a href="#" onclick="openSvgDropbox()">Dropbox</a></li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Open Settings<strong class="caret"></strong></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="choose-file">Local<input type="file" id="choose-settings-file"></a></li>
+                                    <li><a href="#" onclick="loadSettingsGoogle()">Google Drive</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#" onclick="showSaveSettingsModal()">Save Settings</a></li>
+                            <li><a href="#save-gcode-modal" data-toggle="modal">Save GCODE</a></li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <div class="tabbable" id="tabs-139888">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a href="#svgPanel" data-toggle="tab">Edit Toolpaths</a>
+                        </li>
+                        <li>
+                            <a href="#simulatePanel" data-toggle="tab">Simulate GCODE</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="svgPanel">
+                            <svg id="MainSvg" viewBox="0 0 500 500" preserveAspectRatio="xMinYMin meet" />
+                        </div>
+                        <div class="tab-pane" id="simulatePanel">
+                            <canvas id="renderPathCanvas" style="border: none;" width="10" height="10"></canvas>
+                            <br /><br /><b>Simulation time: &nbsp;&nbsp;&nbsp;</b><input id="timeSlider" type="text" data-slider-min="0" data-slider-max="1000" data-slider-step="1" data-slider-value="1000" />
+                            <br /><br />
+                            <ul>
+                                <li>Use mouse to rotate view</li>
+                                <li>Use slider control to set simulation time</li>
+                                <li>Simulation remains blank until you generate toolpaths</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- right -->
+            <div class="col-sm-3 right-column">
+                <div id="alert_placeholder"></div>
+                <!-- material -->
+                <div class="panel panel-default" id="Material">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseMaterial">Material</a>
+                        </h3>
+                    </div>
+                    <div id="collapseMaterial" class="panel-collapse collapse in">
+                        <div class="panel-body">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="col-sm-10">
+                                        <svg id="MaterialSvg" class="autoheight" viewBox="0 0 74 35" internalWidth="74" internalHeight="35" />
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table">
+                                <tr>
+                                    <td><label for="selectMatUnits">Units</label>
+                                    <td>
+                                        <select id="selectMatUnits" data-bind="value: matUnits">
+                                            <option>inch</option>
+                                            <option>mm</option>
+                                        </select>
+                                <tr>
+                                    <td><label for="inputMatThickness">Thickness</label>
+                                    <td><input type="number" id="inputMatThickness" data-bind="value: matThickness" placeholder="Thickness">
+                                <tr>
+                                    <td><label for="selectMatZOrigin">Z Origin</label>
+                                    <td>
+                                        <select id="selectMatZOrigin" data-bind="value: matZOrigin">
+                                            <option>Top</option>
+                                            <option>Bottom</option>
+                                        </select>
+                                <tr>
+                                    <td><label for="inputMatClearance">Clearance</label>
+                                    <td><input type="number" id="inputMatClearance" data-bind="value: matClearance" placeholder="Clearance">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- Curve To Line Conversion -->
+                <div class="panel panel-default" id="CurveToLine">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseCurveToLine">Curve To Line Conversion</a>
+                        </h3>
+                    </div>
+                    <div id="collapseCurveToLine" class="panel-collapse collapse in">
+                        <div class="panel-body">
+                            <div class="form-horizontal">
+                                <table class="table">
+                                    <tr>
+                                        <td><label for="inputSelMinNumSegments">Minimum Segments</label>
+                                        <td><input type="number" id="inputSelMinNumSegments" data-bind="value: selMinNumSegments" placeholder="Segments">
+                                    <tr>
+                                        <td><label for="inputSelMinSegmentLength">Minimum Segment Length (<span data-bind="text: selMinSegmentLength.units()"></span>)</label>
+                                        <td><input type="number" id="inputSelMinSegmentLength" data-bind="value: selMinSegmentLength" placeholder="Length">
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Gcode Conversion -->
+                <div class="panel panel-default" id="GcodeConversion">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapseGcodeConversion">Gcode Conversion</a>
+                        </h3>
+                    </div>
+                    <div id="collapseGcodeConversion" class="panel-collapse collapse in">
+                        <div class="panel-body">
+                            <div class="form-horizontal">
+                                <table class="table">
+                                    <tr>
+                                        <td><label class="control-label">Gcode Units</label>
+                                        <td><select data-bind="value: units"><option>inch<option>mm</select>
+                                    <tr>
+                                        <td><label for="gcodeOffsetX">X Offset</label>
+                                        <td><span data-bind="text: units" />
+                                        <td><input type="number" id="gcodeOffsetX" data-bind="value: offsetX">
+                                    <tr>
+                                        <td><label for="gcodeOffsetY">Y Offset</label>
+                                        <td><span data-bind="text: units" />
+                                        <td><input type="number" id="gcodeOffsetY" data-bind="value: offsetY">
+                                    <tr><td><label class="control-label">Min X</label><td><span data-bind="text: units" /><td><span data-bind="text: minX" />
+                                    <tr><td><label class="control-label">Max X</label><td><span data-bind="text: units" /><td><span data-bind="text: maxX" />
+                                    <tr><td><label class="control-label">Min Y</label><td><span data-bind="text: units" /><td><span data-bind="text: minY" />
+                                    <tr><td><label class="control-label">Max Y</label><td><span data-bind="text: units" /><td><span data-bind="text: maxY" />
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="lib/jquery-2.1.1.min.js"></script>
+    <script src="lib/bootstrap-3.1.1/js/bootstrap.min.js"></script>
+    <script src="lib/bootstrap-slider.min.js"></script>
+    <script src="lib/knockout-3.1.0.js"></script>
+    <script src="lib/snap-0.3.0.svg.js"></script>
+    <script src="lib/clipper_unminified-6.1.3.2.js"></script>
+    <script src="lib/gl-matrix-2.2.0-min.js"></script>
+    <script src="lib/webgl-utils.js"></script>
+    <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="l00gmdr0kh6ke45"></script>
+    <script src="js/path.js"></script>
+    <script src="js/Cam.js"></script>
+    <script src="js/parseGcode.js"></script>
+    <script src="js/RenderPath.js"></script>
+    <script src="js/UnitConverter.js"></script>
+    <script src="js/SvgViewModel.js"></script>
+    <script src="js/MaterialViewModel.js"></script>
+    <script src="js/SelectionViewModel.js"></script>
+    <script src="js/OperationsViewModel.js"></script>
+    <script src="js/GcodeConversionViewModel.js"></script>
+    <script src="js/jscut.js"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onGoogleApiLoad"></script>
+    <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=onGoogleClientLoad"></script>
+</body>
+</html>
