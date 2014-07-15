@@ -11,6 +11,11 @@ $(document).ready(function() {
 		alert(data);
 	});
 
+	socket.on('gcodeFromJscut', function (data) {
+		$('#command').val(data.val);
+		alert('new data from jscut');
+	});
+
 	socket.on('ports', function (data) {
 		//console.log('ports event',data);
 		$('#choosePort').html('<option val="no">Select a serial port</option>');

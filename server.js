@@ -6,6 +6,8 @@ var app = require('http').createServer(handler)
   , fs = require('fs');
 var static = require('node-static');
 var EventEmitter = require('events').EventEmitter;
+var url = require('url');
+var qs = require('querystring');
 
 io.enable('browser client minification');  // send minified client
 io.enable('browser client etag');          // apply etag caching logic based on version number
@@ -16,9 +18,31 @@ app.listen(config.webPort);
 var fileServer = new static.Server('./i');
 
 function handler (req, res) {
-	fileServer.serve(req, res, function (err, result) {
-		if (err) console.log('fileServer error: ',err);
-	});
+
+	//console.log(req.url);
+
+	if (req.url.indexOf('/api/uploadGcode') == 0 && req.method == 'POST') {
+		// this is a gcode upload, probably from jscut
+		console.log('new data from jscut');
+		var b = '';
+		req.on('data', function (data) {
+			b += data;
+			if (b.length > 1e6) {
+				req.connection.destroy();
+			}
+		});
+		req.on('end', function() {
+			var post = qs.parse(b);
+			//console.log(post);
+			io.sockets.emit('gcodeFromJscut', {'val':post.val});
+			res.writeHead(200, {"Content-Type": "application/json"});
+			res.end(JSON.stringify({'data':'ok'}));
+		});
+	} else {
+		fileServer.serve(req, res, function (err, result) {
+			if (err) console.log('fileServer error: ',err);
+		});
+	}
 }
 
 function ConvChar( str ) {
