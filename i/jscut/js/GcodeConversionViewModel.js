@@ -18,6 +18,7 @@
 function GcodeConversionViewModel(options, materialViewModel, toolModel, operationsViewModel) {
     "use strict";
     var self = this;
+    var allowGen = true;
     self.units = ko.observable("mm");
     self.unitConverter = new UnitConverter(self.units);
     self.gcode = ko.observable("");
@@ -42,7 +43,26 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
         return (-self.unitConverter.fromInch(operationsViewModel.minY() / Path.inchToClipperScale) + Number(self.offsetY())).toFixed(4);
     });
 
+    self.zeroLowerLeft = function () {
+        allowGen = false;
+        self.offsetX(-self.unitConverter.fromInch(operationsViewModel.minX() / Path.inchToClipperScale));
+        self.offsetY(-self.unitConverter.fromInch(-operationsViewModel.maxY() / Path.inchToClipperScale));
+        allowGen = true;
+        self.generateGcode();
+    }
+
+    self.zeroCenter = function () {
+        allowGen = false;
+        self.offsetX(-self.unitConverter.fromInch((operationsViewModel.minX() + operationsViewModel.maxX()) / 2 / Path.inchToClipperScale));
+        self.offsetY(-self.unitConverter.fromInch(-(operationsViewModel.minY() + operationsViewModel.maxY()) / 2 / Path.inchToClipperScale));
+        allowGen = true;
+        self.generateGcode();
+    }
+
     self.generateGcode = function () {
+        if (!allowGen)
+            return;
+
         var startTime = Date.now();
         if (options.profile)
             console.log("generateGcode...");
@@ -95,6 +115,7 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
             gcode +=
                 "\r\n;" +
                 "\r\n; Operation:    " + opIndex +
+                "\r\n; Name:         " + op.name() +
                 "\r\n; Type:         " + op.camOp() +
                 "\r\n; Paths:        " + op.toolPaths().length +
                 "\r\n; Direction:    " + op.direction() +
@@ -142,6 +163,9 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
 
         tutorial(5, 'You\'re done! Look at the "Simulate GCODE" tab. Save your gcode.');
     }
+
+    self.offsetX.subscribe(self.generateGcode);
+    self.offsetY.subscribe(self.generateGcode);
 
     self.toJson = function () {
         return {

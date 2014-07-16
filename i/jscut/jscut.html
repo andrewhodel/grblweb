@@ -70,7 +70,7 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="saveGcodeGoogle(function () { $('#save-gcode-modal').modal('hide') })">Google Drive</button>
-                    <!-- <button type="button" class="btn btn-primary" onclick="chiliSaveGcode()">ChiliPeppr</button> -->
+                    <!--<button type="button" class="btn btn-primary" onclick="chiliSaveGcode()">ChiliPeppr</button>-->
                     <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="grblWebSaveGcode()">GRBLweb (autoload)</button>
                     <a id="FileGetGcode2" class="btn btn-primary" target="_blank" data-bind="attr:{href:gcodeUrl()}">Get</a>
                 </div>
@@ -204,6 +204,10 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                                 <table class="table">
                                     <tr><td><td><td><a href="#" data-bind="click: generateToolPath">Generate Toolpath</a>
                                     <tr><td><td><td><a href="#" data-bind="click: $root.removeOperation">Delete Operation</a>
+                                    <tr>
+                                        <td><label class="control-label">Name</label>
+                                        <td>
+                                        <td><input data-bind="value: name">
                                     <tr>
                                         <td><label class="control-label">Visible</label>
                                         <td>
@@ -342,6 +346,12 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                             </div>
                             <table class="table">
                                 <tr>
+                                    <td>
+                                    <td><a href="#" onclick="makeAllSameUnit('mm')">Make all mm</a>
+                                <tr>
+                                    <td>
+                                    <td><a href="#" onclick="makeAllSameUnit('inch')">Make all inch</a>
+                                <tr>
                                     <td><label for="selectMatUnits">Units</label>
                                     <td>
                                         <select id="selectMatUnits" data-bind="value: matUnits">
@@ -401,6 +411,12 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                                     <tr>
                                         <td><label class="control-label">Gcode Units</label>
                                         <td><select data-bind="value: units"><option>inch<option>mm</select>
+                                    <tr>
+                                        <td>
+                                        <td colspan="2"><a href="#" data-bind="click: zeroLowerLeft">Zero lower left</a>
+                                    <tr>
+                                        <td>
+                                        <td colspan="2"><a href="#" data-bind="click: zeroCenter">Zero center</a>
                                     <tr>
                                         <td><label for="gcodeOffsetX">X Offset</label>
                                         <td><span data-bind="text: units" />

@@ -86,7 +86,8 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
     var self = this;
     self.materialViewModel = materialViewModel;
     self.rawPaths = rawPaths;
-    self.units = ko.observable("inch");
+    self.name = ko.observable("");
+    self.units = ko.observable(materialViewModel.matUnits());
     self.unitConverter = new UnitConverter(self.units);
     self.enabled = ko.observable(true);
     self.ramp = ko.observable(false);
@@ -285,12 +286,18 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
             toolPathsChanged();
     });
 
+    self.name.subscribe(function () {
+        if (!generatingToolpath)
+            toolPathsChanged();
+    });
+
     if(!loading)
         self.selected("on");
 
     self.toJson = function () {
         result = {
             'rawPaths': self.rawPaths,
+            'name': self.name(),
             'units': self.units(),
             'enabled': self.enabled(),
             'ramp': self.ramp(),
@@ -316,6 +323,7 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
         if (json) {
             loading = true;
             self.rawPaths = json.rawPaths;
+            f(json.name, self.name);
             self.units(materialViewModel.matUnits()); // backwards compat: operation used to use materialViewModel's units
             f(json.units, self.units);
             f(json.selected, self.selected);
