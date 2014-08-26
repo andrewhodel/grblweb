@@ -47,8 +47,31 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettingsLocalStorage(function () { $('#save-settings-modal').modal('hide') })">In Browser</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettingsLocalFile(function () { $('#save-settings-modal').modal('hide') })">Local file</button>
+                    <button type="button" class="btn btn-primary" onclick="$('#save-settings-modal').modal('hide');$('#save-gist-warning').modal('show')">Gist</button>
                     <button type="button" class="btn btn-primary" onclick="saveSettingsGoogle(function () { $('#save-settings-modal').modal('hide') })">Google Drive</button>
-                    <a id="SaveSettings2" class="btn btn-primary" href="#" target="_blank" data-bind="attr:{href:saveSettingsUrl()}">Get</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load settings from Local Storage Modal -->
+    <div class="modal fade" id="load-local-storage-settings-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Load Settings
+                    </h4>
+                </div>
+                <div class="modal-body">
+                  <p>Select settings:<select id="selectSettings" data-bind="options: localStorageSettings, value: loadLocalStorageFilename"></select></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="loadSettingsLocalStorage(function () { $('#load-local-storage-settings-modal').modal('hide') })">Load</button>
                 </div>
             </div>
         </div>
@@ -69,10 +92,9 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveGcodeLocalFile(function () { $('#save-gcode-modal').modal('hide') })">Local file</button>
                     <button type="button" class="btn btn-primary" onclick="saveGcodeGoogle(function () { $('#save-gcode-modal').modal('hide') })">Google Drive</button>
-                    <!--<button type="button" class="btn btn-primary" onclick="chiliSaveGcode()">ChiliPeppr</button>-->
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="grblWebSaveGcode()">GRBLweb (autoload)</button>
-                    <a id="FileGetGcode2" class="btn btn-primary" target="_blank" data-bind="attr:{href:gcodeUrl()}">Get</a>
+                    <button type="button" class="btn btn-primary" onclick="grblWebSaveGcode()">Send to GRBLweb</button>
                 </div>
             </div>
         </div>
@@ -99,6 +121,56 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
         </div>
     </div>
 
+    <!-- Save Gist Warning -->
+    <div class="modal fade" id="save-gist-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Create Anonymous Gist
+                    </h4>
+                </div>
+                <div class="modal-body alert alert-warning">
+                    <b>Warning</b>: This will create an Anonymous Gist which includes your settings and your SVG files.
+                    Anonymous Gists are public. Anonymous Gists can not be deleted.
+                    <br /><br />
+                    <table class="table">
+                        <tr>
+                            <td><label for="saveGistDescriptionField">Description</label>
+                            <td><input id="saveGistDescriptionField" data-bind="value: saveGistDescription">
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettingsGist()">Create Gist</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Gist Result -->
+    <div class="modal fade" id="save-gist-result" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        Saved Gist
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <a href="#" target="_blank" data-bind="attr:{href:savedGistUrl()}">View Gist</a>
+                    <br/>
+                    <a href="#" target="_blank" data-bind="attr:{href:savedGistLaunchUrl()}">Launch jscut with Gist</a>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Container -->
     <div class="container-fluid">
         <!-- Begin page content -->
@@ -117,37 +189,71 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                             <table class="table">
                                 <tr>
                                     <td><label for="pxPerInch">px per inch</label>
-                                    <td><input type="number" id="pxPerInch" data-bind="value: svgViewModel.pxPerInch">
+                                    <td><input type="number" step="any" id="pxPerInch" data-bind="value: svgViewModel.pxPerInch">
                             </table>
                             <div style="display: inline-block">
                                 <button id="createOperationButton" class="btn btn-default" data-bind="click: addOperation, enable:selectionViewModel.selNumSelected()>0">Create Operation</button>
                             </div>
                         </div>
-                        <table class="table">
-                            <tbody data-bind="foreach: operations">
-                                <tr>
-                                    <td><input type="radio" data-bind="checked: selected" /></td>
-                                    <td><input type="checkbox" data-bind="checked: enabled" /></td>
-                                    <td>
-                                        <select data-bind="value: combineOp">
-                                            <option>Union</option>
-                                            <option>Intersect</option>
-                                            <option>Diff</option>
-                                            <option>Xor</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select data-bind="value: camOp">
+                        <div style="display:table">
+                            <div data-bind="foreach: {data: operations, afterRender: hookupOperationPopovers}">
+                                <div style="display:table-row">
+                                    <div style="display: table-cell; width: 1px; padding-right: 5px; padding-left: 5px"><input id="opEnabled" type="checkbox" data-bind="checked: enabled" /></div>
+                                    <div style="display: table-cell; width: 1px; padding-right: 5px">
+                                        <select id="opOperation" data-bind="value: camOp">
                                             <option>Pocket</option>
                                             <option>Inside</option>
                                             <option>Outside</option>
                                             <option>Engrave</option>
                                         </select>
-                                    </td>
-                                    <td><a href="#" data-bind="click: generateToolPath">Generate</a></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </div>
+                                    <div style="display: table-cell; width: 1000px; padding-right: 5px; text-align:right"><a id="opGenerate" href="#" data-bind="click: generateToolPath">Generate</a></div>
+                                    <div style="display: table-cell; width: 1px; text-align:right"><label id="opShowDetail" data-bind="click: toggleDetail, text: showDetail() ? '&#x25bc;' : '&#x25b6;'"></label></div>
+                                </div>
+                                <div style="display:table-row" data-bind="visible: showDetail">
+                                    <div style="display: table-cell; width: 20px"></div>
+                                    <div style="display: table-cell">
+                                        <table class="table">
+                                            <tr>
+                                                <td><label class="control-label">Name</label>
+                                                <td><input id="opName" data-bind="value: name">
+                                            <tr>
+                                                <td><label class="control-label">Ramp Plunge</label>
+                                                <td><input type="checkbox" data-bind="checked: ramp" />
+                                            <tr>
+                                                <td><label class="control-label">Combine</label>
+                                                <td>
+                                                    <select data-bind="value: combineOp">
+                                                        <option>Union</option>
+                                                        <option>Intersect</option>
+                                                        <option>Diff</option>
+                                                        <option>Xor</option>
+                                                    </select>
+                                            <tr>
+                                                <td><label class="control-label">Direction</label>
+                                                <td>
+                                                    <select id="opDirection" data-bind="value: direction">
+                                                        <option>Conventional</option>
+                                                        <option>Climb</option>
+                                                    </select>
+                                            <tr>
+                                                <td><label class="control-label">Units</label>
+                                                <td><select data-bind="value: units"><option>inch<option>mm</select>
+                                            <tr>
+                                                <td><label class="control-label">Cut Depth</label>
+                                                <td><input id="opCutDepth" type="number" step="any" data-bind="value: cutDepth">
+                                            <tr data-bind="visible: camOp()!='Engrave'">
+                                                <td><label class="control-label">Margin</label>
+                                                <td><input id="opMargin" type="number" step="any" data-bind="value: margin">
+                                            <tr data-bind="visible: camOp()=='Inside' || camOp()=='Outside'">
+                                                <td><label class="control-label">Width</label>
+                                                <td><input type="number" step="any" data-bind="value: width">
+                                            <tr><td><td><a href="#" data-bind="click: $root.removeOperation">Delete Operation</a>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <!-- tool -->
@@ -161,107 +267,33 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                         <div class="panel-body">
                             <table class="table">
                                 <tr>
-                                    <td><label class="control-label">Units</label>
-                                    <td><select data-bind="value: units"><option>inch<option>mm</select>
+                                    <td><label for="toolUnits" class="control-label">Units</label>
+                                    <td><select id="toolUnits" data-bind="value: units"><option>inch<option>mm</select>
                                 <tr>
-                                    <td><label class="control-label">Diameter</label>
+                                    <td><label for="toolDiameter" class="control-label">Diameter</label>
                                     <td><span data-bind="text: units"></span>
-                                    <td><input type="number" data-bind="value: diameter">
+                                    <td><input id="toolDiameter" type="number" step="any" data-bind="value: diameter">
                                 <tr>
-                                    <td><label class="control-label">Pass Depth</label>
+                                    <td><label for="toolPassDepth" class="control-label">Pass Depth</label>
                                     <td><span data-bind="text: units"></span>
-                                    <td><input type="number" data-bind="value: passDepth">
+                                    <td><input id="toolPassDepth" type="number" step="any" data-bind="value: passDepth">
                                 <tr>
-                                    <td><label class="control-label">Overlap</label>
-                                    <td>[0, 1)
-                                    <td><input type="number" data-bind="value: overlap">
+                                    <td><label for="toolStepOver" class="control-label">Step Over</label>
+                                    <td>(0, 1]
+                                    <td><input id="toolStepOver" type="number" step="any" data-bind="value: stepover">
                                 <tr>
-                                    <td><label class="control-label">Rapid</label>
+                                    <td><label for="toolRapidRate" class="control-label">Rapid</label>
                                     <td><span data-bind="text: units"></span>/min
-                                    <td><input type="number" data-bind="value: rapidRate">
+                                    <td><input id="toolRapidRate" type="number" step="any" data-bind="value: rapidRate">
                                 <tr>
-                                    <td><label class="control-label">Plunge</label>
+                                    <td><label for="toolPlungeRate" class="control-label">Plunge</label>
                                     <td><span data-bind="text: units"></span>/min
-                                    <td><input type="number" data-bind="value: plungeRate">
+                                    <td><input id="toolPlungeRate" type="number" step="any" data-bind="value: plungeRate">
                                 <tr>
-                                    <td><label class="control-label">Cut</label>
+                                    <td><label for="toolCutRate" class="control-label">Cut</label>
                                     <td><span data-bind="text: units"></span>/min
-                                    <td><input type="number" data-bind="value: cutRate">
+                                    <td><input id="toolCutRate" type="number" step="any" data-bind="value: cutRate">
                             </table>
-                        </div>
-                    </div>
-                </div>
-                <!-- Operation -->
-                <div data-bind="with: selectedOperation" id="Operation">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">
-                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOperation">Selected Operation</a>
-                            </h3>
-                        </div>
-                        <div id="collapseOperation" class="panel-collapse collapse in">
-                            <div class="panel-body">
-                                <table class="table">
-                                    <tr><td><td><td><a href="#" data-bind="click: generateToolPath">Generate Toolpath</a>
-                                    <tr><td><td><td><a href="#" data-bind="click: $root.removeOperation">Delete Operation</a>
-                                    <tr>
-                                        <td><label class="control-label">Name</label>
-                                        <td>
-                                        <td><input data-bind="value: name">
-                                    <tr>
-                                        <td><label class="control-label">Visible</label>
-                                        <td>
-                                        <td><input type="checkbox" data-bind="checked: enabled" />
-                                    <tr>
-                                        <td><label class="control-label">Ramp Plunge</label>
-                                        <td>
-                                        <td><input type="checkbox" data-bind="checked: ramp" />
-                                    <tr>
-                                        <td><label class="control-label">Combine</label>
-                                        <td>
-                                        <td>
-                                            <select data-bind="value: combineOp">
-                                                <option>Union</option>
-                                                <option>Intersect</option>
-                                                <option>Diff</option>
-                                                <option>Xor</option>
-                                            </select>
-                                    <tr>
-                                        <td><label class="control-label">Operation</label>
-                                        <td>
-                                        <td>
-                                            <select data-bind="value: camOp">
-                                                <option>Pocket</option>
-                                                <option>Inside</option>
-                                                <option>Outside</option>
-                                                <option>Engrave</option>
-                                            </select>
-                                    <tr>
-                                        <td><label class="control-label">Direction</label>
-                                        <td>
-                                        <td>
-                                            <select data-bind="value: direction">
-                                                <option>Conventional</option>
-                                                <option>Climb</option>
-                                            </select>
-                                    <tr>
-                                        <td><label class="control-label">Units</label>
-                                        <td>
-                                        <td><select data-bind="value: units"><option>inch<option>mm</select>
-                                    <tr>
-                                        <td><label class="control-label">Cut Depth</label>
-                                        <td><span data-bind="text: units" />
-                                        <td><input type="number" data-bind="value: cutDepth">
-                                    <tr data-bind="visible: camOp()!='Engrave'">
-                                        <td><label class="control-label">Margin</label>
-                                        <td><span data-bind="text: units" />
-                                        <td><input type="number" data-bind="value: margin">
-                                    <tr data-bind="visible: camOp()=='Inside' || camOp()=='Outside'">
-                                        <td><label class="control-label">Width</label>
-                                        <td><span data-bind="text: materialViewModel.matUnits" />
-                                        <td><input type="number" data-bind="value: width">
-                                </table>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -289,6 +321,7 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Open Settings<strong class="caret"></strong></a>
                                 <ul class="dropdown-menu">
+                                    <li><a href="#" onclick="showLoadSettingsFromLocalStorageModal()">In Browser</a></li>
                                     <li><a href="#" class="choose-file">Local<input type="file" id="choose-settings-file"></a></li>
                                     <li><a href="#" onclick="loadSettingsGoogle()">Google Drive</a></li>
                                 </ul>
@@ -360,7 +393,7 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                                         </select>
                                 <tr>
                                     <td><label for="inputMatThickness">Thickness</label>
-                                    <td><input type="number" id="inputMatThickness" data-bind="value: matThickness" placeholder="Thickness">
+                                    <td><input type="number" step="any" id="inputMatThickness" data-bind="value: matThickness" placeholder="Thickness">
                                 <tr>
                                     <td><label for="selectMatZOrigin">Z Origin</label>
                                     <td>
@@ -370,7 +403,7 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                                         </select>
                                 <tr>
                                     <td><label for="inputMatClearance">Clearance</label>
-                                    <td><input type="number" id="inputMatClearance" data-bind="value: matClearance" placeholder="Clearance">
+                                    <td><input type="number" step="any" id="inputMatClearance" data-bind="value: matClearance" placeholder="Clearance">
                             </table>
                         </div>
                     </div>
@@ -391,7 +424,7 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                                         <td><input type="number" id="inputSelMinNumSegments" data-bind="value: selMinNumSegments" placeholder="Segments">
                                     <tr>
                                         <td><label for="inputSelMinSegmentLength">Minimum Segment Length (<span data-bind="text: selMinSegmentLength.units()"></span>)</label>
-                                        <td><input type="number" id="inputSelMinSegmentLength" data-bind="value: selMinSegmentLength" placeholder="Length">
+                                        <td><input type="number" step="any" id="inputSelMinSegmentLength" data-bind="value: selMinSegmentLength" placeholder="Length">
                                 </table>
                             </div>
                         </div>
@@ -413,22 +446,22 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
                                         <td><select data-bind="value: units"><option>inch<option>mm</select>
                                     <tr>
                                         <td>
-                                        <td colspan="2"><a href="#" data-bind="click: zeroLowerLeft">Zero lower left</a>
+                                        <td colspan="2"><a id="gcodeZeroLowerLeft" href="#" data-bind="click: zeroLowerLeft">Zero lower left</a>
                                     <tr>
                                         <td>
-                                        <td colspan="2"><a href="#" data-bind="click: zeroCenter">Zero center</a>
+                                        <td colspan="2"><a id="gcodeZeroCenter" href="#" data-bind="click: zeroCenter">Zero center</a>
                                     <tr>
                                         <td><label for="gcodeOffsetX">X Offset</label>
                                         <td><span data-bind="text: units" />
-                                        <td><input type="number" id="gcodeOffsetX" data-bind="value: offsetX">
+                                        <td><input type="number" step="any" id="gcodeOffsetX" data-bind="value: offsetX">
                                     <tr>
                                         <td><label for="gcodeOffsetY">Y Offset</label>
                                         <td><span data-bind="text: units" />
-                                        <td><input type="number" id="gcodeOffsetY" data-bind="value: offsetY">
-                                    <tr><td><label class="control-label">Min X</label><td><span data-bind="text: units" /><td><span data-bind="text: minX" />
-                                    <tr><td><label class="control-label">Max X</label><td><span data-bind="text: units" /><td><span data-bind="text: maxX" />
-                                    <tr><td><label class="control-label">Min Y</label><td><span data-bind="text: units" /><td><span data-bind="text: minY" />
-                                    <tr><td><label class="control-label">Max Y</label><td><span data-bind="text: units" /><td><span data-bind="text: maxY" />
+                                        <td><input type="number" step="any" id="gcodeOffsetY" data-bind="value: offsetY">
+                                    <tr><td><label class="control-label">Min X</label><td><span data-bind="text: units" /><td><span id="gcodeMinX" data-bind="text: minX" />
+                                    <tr><td><label class="control-label">Max X</label><td><span data-bind="text: units" /><td><span id="gcodeMaxX" data-bind="text: maxX" />
+                                    <tr><td><label class="control-label">Min Y</label><td><span data-bind="text: units" /><td><span id="gcodeMinY" data-bind="text: minY" />
+                                    <tr><td><label class="control-label">Max Y</label><td><span data-bind="text: units" /><td><span id="gcodeMaxY" data-bind="text: maxY" />
                                 </table>
                             </div>
                         </div>
@@ -445,10 +478,11 @@ along with jscut.  If not, see <http://www.gnu.org/licenses/>.
     <script src="lib/clipper_unminified-6.1.3.2.js"></script>
     <script src="lib/gl-matrix-2.2.0-min.js"></script>
     <script src="lib/webgl-utils.js"></script>
+    <script src="lib/FileSaver.js"></script>
     <script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="l00gmdr0kh6ke45"></script>
     <script src="js/path.js"></script>
     <script src="js/Cam.js"></script>
-    <script src="js/parseGcode.js"></script>
+    <script src="api/js/parseGcode.js"></script>
     <script src="js/RenderPath.js"></script>
     <script src="js/UnitConverter.js"></script>
     <script src="js/SvgViewModel.js"></script>

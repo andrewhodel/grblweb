@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with jscut.  If not, see <http://www.gnu.org/licenses/>.
 
-function RenderPath(options, canvas, shadersReady) {
+function RenderPath(options, canvas, shaderDir, shadersReady) {
     "use strict";
     var self = this;
 
@@ -395,8 +395,8 @@ function RenderPath(options, canvas, shadersReady) {
         self.gl.useProgram(renderHeightMapProgram);
         self.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         self.gl.enable(self.gl.DEPTH_TEST);
-        var canvasSize = Math.max(canvas.width, canvas.height);
-        self.gl.viewport((canvasSize - canvas.width) / 2, (canvas.height - canvasSize) / 2, canvasSize, canvasSize);
+        var canvasSize = Math.min(canvas.width, canvas.height);
+        self.gl.viewport((canvas.width - canvasSize) / 2, (canvas.height - canvasSize) / 2, canvasSize, canvasSize);
         self.gl.clear(self.gl.COLOR_BUFFER_BIT | self.gl.DEPTH_BUFFER_BIT);
 
         self.gl.activeTexture(self.gl.TEXTURE0);
@@ -603,52 +603,53 @@ function RenderPath(options, canvas, shadersReady) {
     }
 
     if (self.gl) {
-        loadShader("js/rasterizePathVertexShader.txt", self.gl.VERTEX_SHADER, function (shader) {
+        loadShader(shaderDir + "/rasterizePathVertexShader.txt", self.gl.VERTEX_SHADER, function (shader) {
             rasterizePathVertexShader = shader;
             loadedShader();
         });
 
-        loadShader("js/rasterizePathFragmentShader.txt", self.gl.FRAGMENT_SHADER, function (shader) {
+        loadShader(shaderDir + "/rasterizePathFragmentShader.txt", self.gl.FRAGMENT_SHADER, function (shader) {
             rasterizePathFragmentShader = shader;
             loadedShader();
         });
 
-        loadShader("js/renderHeightMapVertexShader.txt", self.gl.VERTEX_SHADER, function (shader) {
+        loadShader(shaderDir + "/renderHeightMapVertexShader.txt", self.gl.VERTEX_SHADER, function (shader) {
             renderHeightMapVertexShader = shader;
             loadedShader();
         });
 
-        loadShader("js/renderHeightMapFragmentShader.txt", self.gl.FRAGMENT_SHADER, function (shader) {
+        loadShader(shaderDir + "/renderHeightMapFragmentShader.txt", self.gl.FRAGMENT_SHADER, function (shader) {
             renderHeightMapFragmentShader = shader;
             loadedShader();
         });
 
-        loadShader("js/basicVertexShader.txt", self.gl.VERTEX_SHADER, function (shader) {
+        loadShader(shaderDir + "/basicVertexShader.txt", self.gl.VERTEX_SHADER, function (shader) {
             basicVertexShader = shader;
             loadedShader();
         });
 
-        loadShader("js/basicFragmentShader.txt", self.gl.FRAGMENT_SHADER, function (shader) {
+        loadShader(shaderDir + "/basicFragmentShader.txt", self.gl.FRAGMENT_SHADER, function (shader) {
             basicFragmentShader = shader;
             loadedShader();
         });
     }
 }
 
-function startRenderPath(options, canvas, ready) {
+function startRenderPath(options, canvas, timeSliderElement, shaderDir, ready) {
     var renderPath;
     var timeSlider;
 
-    timeSlider = $('#timeSlider').slider({
-        formater: function (value) {
-            if (renderPath)
-                return 'Time: ' + Math.round(value / 1000 * renderPath.totalTime) + 's';
-            else
-                return value;
-        }
-    });
+    if (timeSliderElement)
+        timeSlider = timeSliderElement.slider({
+            formater: function (value) {
+                if (renderPath)
+                    return 'Time: ' + Math.round(value / 1000 * renderPath.totalTime) + 's';
+                else
+                    return value;
+            }
+        });
 
-    renderPath = new RenderPath(options, canvas, function (renderPath) {
+    renderPath = new RenderPath(options, canvas, shaderDir, function (renderPath) {
         renderPath.fillPathBuffer([], 0, 0, 0);
 
         var mouseDown = false;
@@ -677,9 +678,10 @@ function startRenderPath(options, canvas, ready) {
             mouseDown = false;
         });
 
-        timeSlider.on('slide', function () {
-            renderPath.setStopAtTime(timeSlider.val() / 1000 * renderPath.totalTime);
-        });
+        if (timeSlider)
+            timeSlider.on('slide', function () {
+                renderPath.setStopAtTime(timeSlider.val() / 1000 * renderPath.totalTime);
+            });
 
         ready(renderPath);
     });
@@ -689,9 +691,9 @@ function startRenderPath(options, canvas, ready) {
 
 function startRenderPathDemo() {
     var renderPath;
-    renderPath = startRenderPath({}, $("#renderPathCanvas")[0], function (renderPath) {
+    renderPath = startRenderPath({}, $("#renderPathCanvas")[0], $('#timeSlider'), 'js', function (renderPath) {
         $.get("logo-gcode.txt", function (gcode) {
-            renderPath.fillPathBuffer(parseGcode({}, gcode), 0, .125, 1);
+            renderPath.fillPathBuffer(jscut.parseGcode({}, gcode), 0, .125, 1);
         });
     });
 }

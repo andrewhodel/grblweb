@@ -1,0 +1,23 @@
+{
+  "name": "jscut",
+  "version": "0.0.0",
+  "homepage": "https://github.com/tbfleming/jscut",
+  "authors": [
+    "Todd Fleming"
+  ],
+  "license": "GPL3",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#~0.3.4",
+    "core-localstorage": "Polymer/core-localstorage#~0.3.4",
+    "paper-slider": "Polymer/paper-slider#~0.3.4",
+    "core-pages": "Polymer/core-pages#~0.3.4",
+    "core-collapse": "Polymer/core-collapse#~0.3.4"
+  }
+}

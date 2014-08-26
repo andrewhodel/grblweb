@@ -1,0 +1,26 @@
+application: emerald-vent-645
+runtime: python27
+version: 1
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /bower_components
+  static_dir: bower_components
+  http_headers:
+      Access-Control-Allow-Origin: "*"
+
+- url: /api
+  static_dir: api
+  http_headers:
+      Access-Control-Allow-Origin: "*"
+
+- url: /js
+  static_dir: js
+  http_headers:
+      Access-Control-Allow-Origin: "*"
+
+- url: /lib
+  static_dir: lib
+  http_headers:
+      Access-Control-Allow-Origin: "*"

@@ -22,9 +22,12 @@ var options = {
 function MiscViewModel() {
     var self = this;
     self.saveSettingsFilename = ko.observable("settings.jscut");
-    self.saveSettingsContent = ko.observable("");
-    self.saveSettingsUrl = ko.observable(null);
+    self.loadLocalStorageFilename = ko.observable("settings.jscut");
     self.launchChiliUrl = ko.observable(null);
+    self.saveGistDescription = ko.observable("jscut settings");
+    self.savedGistUrl = ko.observable("");
+    self.savedGistLaunchUrl = ko.observable("");
+    self.localStorageSettings = ko.observableArray([]);
 }
 
 var mainSvg = Snap("#MainSvg");
@@ -58,14 +61,14 @@ ko.applyBindings(materialViewModel, $("#Material")[0]);
 ko.applyBindings(selectionViewModel, $("#CurveToLine")[0]);
 ko.applyBindings(toolModel, $("#Tool")[0]);
 ko.applyBindings(operationsViewModel, $("#Operations")[0]);
-ko.applyBindings(operationsViewModel, $("#Operation")[0]);
 ko.applyBindings(gcodeConversionViewModel, $("#GcodeConversion")[0]);
 ko.applyBindings(gcodeConversionViewModel, $("#FileGetGcode1")[0]);
-ko.applyBindings(gcodeConversionViewModel, $("#FileGetGcode2")[0]);
 ko.applyBindings(gcodeConversionViewModel, $("#simulatePanel")[0]);
 ko.applyBindings(miscViewModel, $("#SaveSettings1")[0]);
-ko.applyBindings(miscViewModel, $("#SaveSettings2")[0]);
 ko.applyBindings(miscViewModel, $("#LaunchChiliPeppr")[0]);
+ko.applyBindings(miscViewModel, $("#save-gist-warning")[0]);
+ko.applyBindings(miscViewModel, $("#save-gist-result")[0]);
+ko.applyBindings(miscViewModel, $("#load-local-storage-settings-modal")[0]);
 
 function updateSvgAutoHeight() {
     $("svg.autoheight").each(function () {
@@ -106,7 +109,7 @@ function updateRenderPathSize() {
 $(function () {
     updateRenderPathSize();
     $(window).resize(updateRenderPathSize);
-    renderPath = startRenderPath(options, $("#renderPathCanvas")[0], function () { });
+    renderPath = startRenderPath(options, $("#renderPathCanvas")[0], $('#timeSlider'), 'js', function () { });
 });
 
 var nextAlertNum = 1;
@@ -210,13 +213,61 @@ function makeAllSameUnit(val) {
         ops[i].units(val);
 }
 
-$('#pxPerInch').popover({
-    trigger: "hover",
-    html: true,
-    content: "<table><tr><td>Inkscape:<td>90<tr><td>Adobe Illustrator:<td>72<tr><td>CorelDRAW:<td>96</table>",
-    container: "body",
-    placement: "right"
-});
+function popoverHover(obj, placement, content) {
+    $(obj).popover({
+        trigger: "hover",
+        html: true,
+        content: content,
+        container: "body",
+        placement: placement
+    });
+}
+
+popoverHover('#pxPerInch', "bottom", "SVG editors use different scales from each other; set this to allow sizes come out correctly.<br><br><table><tr><td>Inkscape:<td>90<tr><td>Adobe Illustrator:<td>72<tr><td>CorelDRAW:<td>96</table>");
+
+popoverHover('#toolDiameter', "right", "Diameter of tool");
+popoverHover('#toolPassDepth', "right", "Maximum depth the tool should plunge each pass. Use a smaller pass depth for harder materials and better quality.");
+popoverHover('#toolStepOver', "right", "What fraction of the tool diameter the tool should step over each time around a loop. Smaller values produce better cuts and reduce tool wear, but take longer to complete.");
+popoverHover('#toolRapidRate', "right", "The speed the tool moves while not cutting");
+popoverHover('#toolPlungeRate', "right", "The speed the tool plunges downwards into the material");
+popoverHover('#toolCutRate', "right", "The speed the tool moves horizontally during cutting");
+
+popoverHover('#inputMatThickness', "top", "How thick is the material");
+popoverHover('#selectMatZOrigin', "top", "What is considered the 0 Z position");
+popoverHover('#inputMatClearance', "top", "How high the tool moves over the material. Increase this when using clamps or screws to fasten the material.");
+
+popoverHover('#inputSelMinNumSegments', "top", "Minimum number of line segments to convert a curve to. jscut does this conversion when you select an object (it becomes blue).");
+popoverHover('#inputSelMinSegmentLength', "top", "Minimum length of each line segment when converting curves. jscut does this conversion when you select an object (it becomes blue).");
+
+popoverHover('#gcodeZeroLowerLeft', "top", "Changes the X and Y Offset values so that 0,0 is at the lower-left corner of all tool paths.");
+popoverHover('#gcodeZeroCenter', "top", "Changes the X and Y Offset values so that 0,0 is at the center of all tool paths.");
+popoverHover('#gcodeOffsetX', "top", "Amount to add to gcode X coordinates");
+popoverHover('#gcodeOffsetY', "top", "Amount to add to gcode Y coordinates");
+popoverHover('#gcodeMinX', "top", "Minimum X coordinate in gcode. If this is out of range of your machine then adjust X Offset.");
+popoverHover('#gcodeMaxX', "top", "Maximum X coordinate in gcode. If this is out of range of your machine then adjust X Offset.");
+popoverHover('#gcodeMinY', "top", "Minimum Y coordinate in gcode. If this is out of range of your machine then adjust Y Offset.");
+popoverHover('#gcodeMaxY', "top", "Maximum Y coordinate in gcode. If this is out of range of your machine then adjust Y Offset.");
+
+var operationPopovers = {
+    opEnabled: ['top', 'Whether this operation is enabled'],
+    opOperation: ['top', 'What operation type to perform'],
+    opGenerate: ['top', 'Generate toolpath for operation'],
+    opShowDetail: ['top', 'Show additional detail'],
+    opName: ['right', 'Name used in gcode comments'],
+    opDirection: ['right', 'What direction the cutter should travel'],
+    opCutDepth: ['right', 'How deep this operation should cut in total'],
+    opMargin: ['right', 'Positive: how much material to leave uncut.<br><br>Negative: how much extra material to cut'],
+}
+
+function hookupOperationPopovers(nodes) {
+    "use strict";
+    for (var i = 0; i < nodes.length; ++i) {
+        var node = nodes[i];
+        hookupOperationPopovers(node.childNodes);
+        if (node.id in operationPopovers)
+            popoverHover(node, operationPopovers[node.id][0], operationPopovers[node.id][1]);
+    }
+}
 
 $('#createOperationButton').popover({
     trigger: "manual",
@@ -258,12 +309,6 @@ function fromJson(json) {
 
 function showSaveSettingsModal() {
     "use strict";
-    miscViewModel.saveSettingsContent(JSON.stringify(toJson()));
-
-    if (miscViewModel.saveSettingsUrl() != null)
-        URL.revokeObjectURL(miscViewModel.saveSettingsUrl());
-    miscViewModel.saveSettingsUrl(URL.createObjectURL(new Blob([miscViewModel.saveSettingsContent()])));
-
     $('#save-settings-modal').modal('show');
 }
 
@@ -469,7 +514,94 @@ function loadSettingsGoogle() {
 }
 
 function saveSettingsGoogle(callback) {
-    saveGoogle(miscViewModel.saveSettingsFilename(), miscViewModel.saveSettingsContent(), callback);
+    saveGoogle(miscViewModel.saveSettingsFilename(), JSON.stringify(toJson()), callback);
+}
+
+/* Support for storing settings in the browser local storage
+ */
+function showLoadSettingsFromLocalStorageModal() {
+    "use strict";
+
+    var settings = localStorage.getItem("settings");
+    if (settings == null) {
+      showAlert("No settings stored locally yet.", "alert-danger");
+    }
+    miscViewModel.localStorageSettings(Object.keys(JSON.parse(settings)));
+
+    $('#load-local-storage-settings-modal').modal('show');
+}
+
+function loadSettingsLocalStorage() {
+    var alert = showAlert("Loading settings from browser local storage", "alert-info", false);
+    console.log("loadSettingsLocalStorage");
+    var settings = JSON.parse(localStorage.getItem("settings"));
+    fromJson(settings[miscViewModel.loadLocalStorageFilename()]);
+    $('#load-local-storage-settings-modal').modal('hide');
+    alert.remove();
+}
+
+function saveSettingsLocalStorage(callback) {
+    var alert = showAlert("Saving settings into browser local storage", "alert-info", false);
+    var settings = JSON.parse(localStorage.getItem("settings"));
+    if (settings == null) {
+      settings = {};
+    }
+    settings[miscViewModel.saveSettingsFilename()] = toJson();
+    localStorage.setItem("settings", JSON.stringify(settings));
+    alert.remove();
+    callback();
+}
+
+/* Support for storing settings and gcode in local files
+ */
+function saveGcodeLocalFile(callback) {
+    if (gcodeConversionViewModel.gcode() == "") {
+        showAlert('Click "Generate Gcode" first', "alert-danger");
+        return;
+    }
+    var blob = new Blob([gcodeConversionViewModel.gcode()], {type: 'text/plain'});
+    saveAs(blob, gcodeConversionViewModel.gcodeFilename());
+    callback();
+}
+
+function saveSettingsLocalFile(callback) {
+    var blob = new Blob([JSON.stringify(toJson())], {type: 'text/json'});
+    saveAs(blob, miscViewModel.saveSettingsFilename());
+    callback();
+}
+
+function saveSettingsGist() {
+    var alert = showAlert("Saving Anonymous Gist", "alert-info", false);
+    var files = { "settings.jscut": { "content": JSON.stringify(toJson()) } };
+
+    var svgs = contentGroup.node.childNodes;
+    for (var i = 0; i < svgs.length; ++i)
+        if (svgs[i].nodeName == 'svg')
+            files['svg' + i + '.svg'] = { "content": new XMLSerializer().serializeToString(svgs[i]) };
+
+    $.ajax({
+        url: "https://api.github.com/gists",
+        type: "POST",
+        dataType: "json",
+        crossDomain: true,
+        data: JSON.stringify({
+            "description": miscViewModel.saveGistDescription(),
+            "public": true,
+            "files": files,
+        })
+    })
+    .done(function (content) {
+        alert.remove();
+        showAlert("Saved Anonymous Gist", "alert-success");
+        $('#save-gist-warning').modal('hide');
+        $('#save-gist-result').modal('show');
+        miscViewModel.savedGistUrl(content.html_url);
+        miscViewModel.savedGistLaunchUrl("http://jscut.org/jscut.html?gist="+content.id);
+    })
+    .fail(function (e) {
+        alert.remove();
+        showAlert("Can't save Anonymous Gist: " + e.responseText, "alert-danger");
+    });
 }
 
 function loadGist(gist) {

@@ -15,15 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with jscut.  If not, see <http://www.gnu.org/licenses/>.
 
-var Cam = new function () {
+var jscut = jscut || {};
+jscut.priv = jscut.priv || {};
+jscut.priv.cam = jscut.priv.cam || {};
+
+(function () {
     "use strict";
-    var Cam = this;
 
     // Does the line from p1 to p2 cross outside of bounds?
     function crosses(bounds, p1, p2) {
         if (bounds == null)
             return true;
-        if(p1.X == p2.X && p1.Y == p2.Y)
+        if (p1.X == p2.X && p1.Y == p2.Y)
             return false;
         var clipper = new ClipperLib.Clipper();
         clipper.AddPath([p1, p2], ClipperLib.PolyType.ptSubject, false);
@@ -55,7 +58,7 @@ var Cam = new function () {
 
         var currentPath = paths[0];
         currentPath.push(currentPath[0]);
-        var currentPoint = currentPath[currentPath.length-1];
+        var currentPoint = currentPath[currentPath.length - 1];
         paths[0] = [];
 
         var mergedPaths = [];
@@ -96,11 +99,12 @@ var Cam = new function () {
         mergedPaths.push(currentPath);
 
         var camPaths = [];
-        for(var i = 0; i < mergedPaths.length; ++i) {
+        for (var i = 0; i < mergedPaths.length; ++i) {
             var path = mergedPaths[i];
             camPaths.push({
                 path: path,
-                safeToClose: !crosses(bounds, path[0], path[path.length-1])});
+                safeToClose: !crosses(bounds, path[0], path[path.length - 1])
+            });
         }
 
         return camPaths;
@@ -108,8 +112,8 @@ var Cam = new function () {
 
     // Compute paths for pocket operation on Clipper geometry. Returns array
     // of CamPath. cutterDia is in Clipper units. overlap is in the range [0, 1).
-    Cam.pocket = function (geometry, cutterDia, overlap, climb) {
-        var current = Path.offset(geometry, -cutterDia / 2);
+    jscut.priv.cam.pocket = function (geometry, cutterDia, overlap, climb) {
+        var current = jscut.priv.path.offset(geometry, -cutterDia / 2);
         var bounds = current.slice(0);
         var allPaths = [];
         while (current.length != 0) {
@@ -117,7 +121,7 @@ var Cam = new function () {
                 for (var i = 0; i < current.length; ++i)
                     current[i].reverse();
             allPaths = current.concat(allPaths);
-            current = Path.offset(current, -cutterDia * (1 - overlap));
+            current = jscut.priv.path.offset(current, -cutterDia * (1 - overlap));
         }
         return mergePaths(bounds, allPaths);
     };
@@ -125,7 +129,7 @@ var Cam = new function () {
     // Compute paths for outline operation on Clipper geometry. Returns array
     // of CamPath. cutterDia and width are in Clipper units. overlap is in the 
     // range [0, 1).
-    Cam.outline = function (geometry, cutterDia, isInside, width, overlap, climb) {
+    jscut.priv.cam.outline = function (geometry, cutterDia, isInside, width, overlap, climb) {
         var currentWidth = cutterDia;
         var allPaths = [];
         var eachWidth = cutterDia * (1 - overlap);
@@ -136,13 +140,13 @@ var Cam = new function () {
         var needReverse;
 
         if (isInside) {
-            current = Path.offset(geometry, -cutterDia / 2);
-            bounds = Path.diff(current, Path.offset(geometry, -(width - cutterDia / 2)));
+            current = jscut.priv.path.offset(geometry, -cutterDia / 2);
+            bounds = jscut.priv.path.diff(current, jscut.priv.path.offset(geometry, -(width - cutterDia / 2)));
             eachOffset = -eachWidth;
             needReverse = climb;
         } else {
-            current = Path.offset(geometry, cutterDia / 2);
-            bounds = Path.diff(Path.offset(geometry, width - cutterDia / 2), current);
+            current = jscut.priv.path.offset(geometry, cutterDia / 2);
+            bounds = jscut.priv.path.diff(jscut.priv.path.offset(geometry, width - cutterDia / 2), current);
             eachOffset = eachWidth;
             needReverse = !climb;
         }
@@ -154,7 +158,7 @@ var Cam = new function () {
             allPaths = current.concat(allPaths);
             var nextWidth = currentWidth + eachWidth;
             if (nextWidth > width && width - currentWidth > 0) {
-                current = Path.offset(current, width - currentWidth);
+                current = jscut.priv.path.offset(current, width - currentWidth);
                 if (needReverse)
                     for (var i = 0; i < current.length; ++i)
                         current[i].reverse();
@@ -162,14 +166,14 @@ var Cam = new function () {
                 break;
             }
             currentWidth = nextWidth;
-            current = Path.offset(current, eachOffset);
+            current = jscut.priv.path.offset(current, eachOffset);
         }
         return mergePaths(bounds, allPaths);
     };
 
     // Compute paths for engrave operation on Clipper geometry. Returns array
     // of CamPath.
-    Cam.engrave = function (geometry, climb) {
+    jscut.priv.cam.engrave = function (geometry, climb) {
         var allPaths = [];
         for (var i = 0; i < geometry.length; ++i) {
             var path = geometry[i].slice(0);
@@ -178,15 +182,15 @@ var Cam = new function () {
             path.push(path[0]);
             allPaths.push(path);
         }
-        result = mergePaths(null, allPaths);
+        var result = mergePaths(null, allPaths);
         for (var i = 0; i < result.length; ++i)
             result[i].safeToClose = true;
         return result;
     };
 
     // Convert array of CamPath to array of Clipper path
-    Cam.getClipperPathsFromCamPaths = function (paths) {
-        result = [];
+    jscut.priv.cam.getClipperPathsFromCamPaths = function (paths) {
+        var result = [];
         if (paths != null)
             for (var i = 0; i < paths.length; ++i)
                 result.push(paths[i].path);
@@ -210,7 +214,7 @@ var Cam = new function () {
     //      retractFeed:    Feedrate to retract cutter (gcode units)
     //      cutFeed:        Feedrate for horizontal cuts (gcode units)
     //      rapidFeed:      Feedrate for rapid moves (gcode units)
-    Cam.getGcode = function (namedArgs) {
+    jscut.priv.cam.getGcode = function (namedArgs) {
         var paths = namedArgs.paths;
         var ramp = namedArgs.ramp;
         var scale = namedArgs.scale;
@@ -252,7 +256,7 @@ var Cam = new function () {
             if (path.path.length == 0)
                 continue;
             gcode +=
-                '\r\n'+
+                '\r\n' +
                 '; Path ' + pathIndex + '\r\n';
             var currentZ = topZ;
             while (currentZ > botZ) {
@@ -313,4 +317,4 @@ var Cam = new function () {
 
         return gcode;
     };
-};
+})();

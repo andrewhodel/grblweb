@@ -21,7 +21,7 @@ function ToolModel() {
     self.unitConverter = new UnitConverter(self.units);
     self.diameter = ko.observable(.125);
     self.passDepth = ko.observable(.125);
-    self.overlap = ko.observable(.6);
+    self.stepover = ko.observable(.4);
     self.rapidRate = ko.observable(100);
     self.plungeRate = ko.observable(5);
     self.cutRate = ko.observable(40);
@@ -34,19 +34,19 @@ function ToolModel() {
 
     self.getCamArgs = function () {
         result = {
-            diameterClipper: self.diameter.toInch() * Path.inchToClipperScale,
-            overlap: Number(self.overlap()),
+            diameterClipper: self.diameter.toInch() * jscut.priv.path.inchToClipperScale,
+            stepover: Number(self.stepover()),
         };
         if (result.diameterClipper <= 0) {
             showAlert("Tool diameter must be greater than 0", "alert-danger");
             return null;
         }
-        if (result.overlap < 0) {
-            showAlert("Tool overlap must be at least 0", "alert-danger");
+        if (result.stepover <= 0) {
+            showAlert("Tool stepover must be geater than 0", "alert-danger");
             return null;
         }
-        if (result.overlap >= 1) {
-            showAlert("Tool overlap must be less than 1", "alert-danger");
+        if (result.stepover > 1) {
+            showAlert("Tool stepover must be less than or equal to 1", "alert-danger");
             return null;
         }
         return result;
@@ -57,7 +57,7 @@ function ToolModel() {
             'units': self.units(),
             'diameter': self.diameter(),
             'passDepth': self.passDepth(),
-            'overlap': self.overlap(),
+            'stepover': self.stepover(),
             'rapidRate': self.rapidRate(),
             'plungeRate': self.plungeRate(),
             'cutRate': self.cutRate(),
@@ -74,7 +74,9 @@ function ToolModel() {
             f(json.units, self.units);
             f(json.diameter, self.diameter);
             f(json.passDepth, self.passDepth);
-            f(json.overlap, self.overlap);
+            if (typeof json.overlap !== "undefined") // backwards compat
+                self.stepover(1 - json.overlap);
+            f(json.stepover, self.stepover);
             f(json.rapidRate, self.rapidRate);
             f(json.plungeRate, self.plungeRate);
             f(json.cutRate, self.cutRate);
@@ -86,12 +88,12 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
     var self = this;
     self.materialViewModel = materialViewModel;
     self.rawPaths = rawPaths;
+    self.showDetail = ko.observable(false);
     self.name = ko.observable("");
     self.units = ko.observable(materialViewModel.matUnits());
     self.unitConverter = new UnitConverter(self.units);
     self.enabled = ko.observable(true);
     self.ramp = ko.observable(false);
-    self.selected = ko.observable("off");
     self.combineOp = ko.observable("Union");
     self.camOp = ko.observable("Pocket");
     self.direction = ko.observable("Conventional");
@@ -109,6 +111,10 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
 
     self.cutDepth.fromInch(toolModel.passDepth.toInch());
 
+    self.toggleDetail = function () {
+        self.showDetail(!self.showDetail());
+    }
+
     self.removeCombinedGeometrySvg = function() {
         if (self.combinedGeometrySvg) {
             self.combinedGeometrySvg.remove();
@@ -125,15 +131,6 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
     }
 
     self.direction.subscribe(self.removeToolPaths);
-
-    self.selected.subscribe(function (newValue) {
-        if (newValue == "on")
-            operationsViewModel.selectedOperation(self);
-    });
-
-    operationsViewModel.selectedOperation.subscribe(function () {
-        self.selected(operationsViewModel.selectedOperation() === self ? "on" : "off");
-    });
 
     self.enabled.subscribe(function (newValue) {
         var v;
@@ -160,7 +157,7 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
 
         var all = [];
         for (var i = 0; i < self.rawPaths.length; ++i) {
-            var geometry = Path.getClipperPathsFromSnapPath(self.rawPaths[i].path, svgViewModel.pxPerInch(), function (msg) {
+            var geometry = jscut.priv.path.getClipperPathsFromSnapPath(self.rawPaths[i].path, svgViewModel.pxPerInch(), function (msg) {
                 showAlert(msg, "alert-warning");
             });
             if (geometry != null) {
@@ -169,7 +166,7 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
                     fillRule = ClipperLib.PolyFillType.pftNonZero;
                 else
                     fillRule = ClipperLib.PolyFillType.pftEvenOdd;
-                all.push(Path.simplifyAndClean(geometry, fillRule));
+                all.push(jscut.priv.path.simplifyAndClean(geometry, fillRule));
             }
         }
 
@@ -185,34 +182,34 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
             else if (self.combineOp() == "Xor")
                 clipType = ClipperLib.ClipType.ctXor;
             for (var i = 1; i < all.length; ++i)
-                self.combinedGeometry = Path.clip(self.combinedGeometry, all[i], clipType);
+                self.combinedGeometry = jscut.priv.path.clip(self.combinedGeometry, all[i], clipType);
         }
 
         var previewGeometry = self.combinedGeometry;
 
         if (previewGeometry.length != 0) {
-            var offset = self.margin.toInch() * Path.inchToClipperScale;
+            var offset = self.margin.toInch() * jscut.priv.path.inchToClipperScale;
             if (self.camOp() == "Pocket" || self.camOp() == "Inside")
                 offset = -offset;
             if (self.camOp() != "Engrave" && offset != 0)
-                previewGeometry = Path.offset(previewGeometry, offset);
+                previewGeometry = jscut.priv.path.offset(previewGeometry, offset);
 
             if (self.camOp() == "Inside" || self.camOp() == "Outside") {
                 var toolCamArgs = toolModel.getCamArgs();
                 if (toolCamArgs != null) {
-                    var width = self.width.toInch() * Path.inchToClipperScale;
+                    var width = self.width.toInch() * jscut.priv.path.inchToClipperScale;
                     if (width < toolCamArgs.diameterClipper)
                         width = toolCamArgs.diameterClipper;
                     if (self.camOp() == "Inside")
-                        previewGeometry = Path.diff(previewGeometry, Path.offset(previewGeometry, -width));
+                        previewGeometry = jscut.priv.path.diff(previewGeometry, jscut.priv.path.offset(previewGeometry, -width));
                     else
-                        previewGeometry = Path.diff(Path.offset(previewGeometry, width), previewGeometry);
+                        previewGeometry = jscut.priv.path.diff(jscut.priv.path.offset(previewGeometry, width), previewGeometry);
                 }
             }
         }
 
         if (previewGeometry.length != 0) {
-            var path = Path.getSnapPathFromClipperPaths(previewGeometry, svgViewModel.pxPerInch());
+            var path = jscut.priv.path.getSnapPathFromClipperPaths(previewGeometry, svgViewModel.pxPerInch());
             if (path != null)
                 self.combinedGeometrySvg = combinedGeometryGroup.path(path).attr("class", "combinedGeometry");
         }
@@ -223,7 +220,7 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
         self.enabled(true);
     }
 
-    toolModel.overlap.subscribe(self.removeToolPaths);
+    toolModel.stepover.subscribe(self.removeToolPaths);
 
     toolModel.diameter.subscribe(self.recombine);
     svgViewModel.pxPerInch.subscribe(self.recombine);
@@ -247,24 +244,24 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
         self.removeToolPaths();
 
         var geometry = self.combinedGeometry;
-        var offset = self.margin.toInch() * Path.inchToClipperScale;
+        var offset = self.margin.toInch() * jscut.priv.path.inchToClipperScale;
         if (self.camOp() == "Pocket" || self.camOp() == "Inside")
             offset = -offset;
         if (self.camOp() != "Engrave" && offset != 0)
-            geometry = Path.offset(geometry, offset);
+            geometry = jscut.priv.path.offset(geometry, offset);
 
         if (self.camOp() == "Pocket")
-            self.toolPaths(Cam.pocket(geometry, toolCamArgs.diameterClipper, toolCamArgs.overlap, self.direction() == "Climb"));
+            self.toolPaths(jscut.priv.cam.pocket(geometry, toolCamArgs.diameterClipper, 1 - toolCamArgs.stepover, self.direction() == "Climb"));
         else if (self.camOp() == "Inside" || self.camOp() == "Outside") {
-            var width = self.width.toInch() * Path.inchToClipperScale;
+            var width = self.width.toInch() * jscut.priv.path.inchToClipperScale;
             if (width < toolCamArgs.diameterClipper)
                 width = toolCamArgs.diameterClipper;
-            self.toolPaths(Cam.outline(geometry, toolCamArgs.diameterClipper, self.camOp() == "Inside", width, toolCamArgs.overlap, self.direction() == "Climb"));
+            self.toolPaths(jscut.priv.cam.outline(geometry, toolCamArgs.diameterClipper, self.camOp() == "Inside", width, 1 - toolCamArgs.stepover, self.direction() == "Climb"));
         }
         else if (self.camOp() == "Engrave")
-            self.toolPaths(Cam.engrave(geometry, self.direction() == "Climb"));
+            self.toolPaths(jscut.priv.cam.engrave(geometry, self.direction() == "Climb"));
 
-        var path = Path.getSnapPathFromClipperPaths(Cam.getClipperPathsFromCamPaths(self.toolPaths()), svgViewModel.pxPerInch());
+        var path = jscut.priv.path.getSnapPathFromClipperPaths(jscut.priv.cam.getClipperPathsFromCamPaths(self.toolPaths()), svgViewModel.pxPerInch());
         if (path != null && path.length > 0)
             self.toolPathSvg = toolPathsGroup.path(path).attr("class", "toolPath");
 
@@ -291,9 +288,6 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
             toolPathsChanged();
     });
 
-    if(!loading)
-        self.selected("on");
-
     self.toJson = function () {
         result = {
             'rawPaths': self.rawPaths,
@@ -301,7 +295,6 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
             'units': self.units(),
             'enabled': self.enabled(),
             'ramp': self.ramp(),
-            'selected': self.selected(),
             'combineOp': self.combineOp(),
             'camOp': self.camOp(),
             'direction': self.direction(),
@@ -324,9 +317,8 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
             loading = true;
             self.rawPaths = json.rawPaths;
             f(json.name, self.name);
-            self.units(materialViewModel.matUnits()); // backwards compat: operation used to use materialViewModel's units
+            self.units(materialViewModel.matUnits()); // backwards compat: operation used to use materialViewModel's units !!!!! future hazard when switching to jscut.model.cleanOperation
             f(json.units, self.units);
-            f(json.selected, self.selected);
             f(json.ramp, self.ramp);
             f(json.combineOp, self.combineOp);
             if (json.camOp == "Outline")
@@ -358,7 +350,6 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
     var self = this;
     self.svgViewModel = svgViewModel;
     self.operations = ko.observableArray();
-    self.selectedOperation = ko.observable();
     self.minX = ko.observable(0);
     self.minY = ko.observable(0);
     self.maxX = ko.observable(0);
@@ -424,12 +415,6 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
         operation.removeToolPaths();
         var i = self.operations.indexOf(operation);
         self.operations.remove(operation);
-        if (i < self.operations().length)
-            self.selectedOperation(self.operations()[i]);
-        else if (self.operations().length > 0)
-            self.selectedOperation(self.operations()[self.operations().length - 1]);
-        else
-            self.selectedOperation(null);
     }
 
     self.clickOnSvg = function (elem) {
@@ -457,7 +442,6 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
             }
 
             self.operations.removeAll();
-            self.selectedOperation(null);
 
             for (var i = 0; i < json.operations.length; ++i) {
                 var op = new Operation(options, svgViewModel, materialViewModel, self, toolModel, combinedGeometryGroup, toolPathsGroup, [], toolPathsChanged, true);
