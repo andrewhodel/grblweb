@@ -13,7 +13,6 @@ There is a prebuilt Rasbian image with GRBLweb already running on it at port 80 
 The ethernet interface will get a DHCP address that you can ssh to.
 
 username: pi
-
 password: raspbian
 
 ## GRBL Reading
@@ -24,29 +23,28 @@ https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8
 
 http://onehossshay.wordpress.com/2011/08/21/grbl-how-it-works-and-other-thoughts/
 
-## Config
-
-edit config.js to change serial baud rate and web port
-
 ## Installation
 
 ```
-npm install node-static serialport socket.io
-npm install -g forever
+git clone https://github.com/andrewhodel/grblweb.git
+cd grblweb
+npm install
 ```
+
+## Config
+
+edit config.js to change serial baud rate and web port
 
 ## Running
 
 // standalone
 ```
-cd grblweb
 node server.js
 ```
 
 // with forever
 ```
 npm install -g forever
-cd grblweb
 forever start server.js
 ```
 
