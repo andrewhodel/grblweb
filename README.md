@@ -15,6 +15,10 @@ The ethernet interface will get a DHCP address that you can ssh to.
 username: pi
 password: raspbian
 
+## GRBL v.8 vs v.9 and baud rate
+
+GRBL .9 uses 115200 baud rate while previous versions use 9600, if you are using GRBL .9 change config.serialBaudRate to 115200 in config.js.
+
 ## GRBL Reading
 
 https://github.com/grbl/grbl
