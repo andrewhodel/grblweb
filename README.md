@@ -62,4 +62,6 @@ http://hostaddress:8000/
 
 Read http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 
+Set config.usettyAMA0 to 1 in config.js
+
 This is already enabled on the prebuilt GRBLweb Raspbian image.
