@@ -33,6 +33,25 @@
 .fixed-width-cell {
     width:250px;
 }
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
 </style>
 
 </head>
@@ -175,9 +194,11 @@ Z+
 <br />
 <textarea style="height: 300px; width: 100%; overflow: auto;" id="command"></textarea>
 
-<span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Choose File to upload it.</span>
+<span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Upload GCODE to upload it.</span>
  <button type="button" class="btn btn-warning" style="float: right;" id="sendCommand">Send (shift+enter)</button>
- <input type="file" style="float: right; margin: 10px;" id="fileInput" />
+<span style="float: right; margin-right: 10px;" class="btn btn-info btn-file">
+Upload GCODE <input type="file" id="fileInput" />
+</span>
 
           </div>
         </div>

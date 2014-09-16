@@ -22,6 +22,10 @@ $(document).ready(function() {
 		for (var i=0; i<data.length; i++) {
 			$('#choosePort').append('<option value="'+i+'">'+data[i].comName+':'+data[i].pnpId+'</option>');
 		}
+		if (data.length == 1) {
+			$('#choosePort').val('0');
+			$('#choosePort').change();
+		}
 	});
 
 	socket.on('qStatus', function (data) {
@@ -47,6 +51,7 @@ $(document).ready(function() {
 	$('#choosePort').on('change', function() {
 		// select port
 		socket.emit('usePort', $('#choosePort').val());
+		$('#mStatus').html('Port Selected');
 	})
 
 	$('#sendKill').on('click', function() {

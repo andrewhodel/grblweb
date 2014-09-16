@@ -52,7 +52,7 @@ var allPorts = [];
 serialport.list(function (err, ports) {
 
 	// if on rPi - http://www.hobbytronics.co.uk/raspberry-pi-serial-port
-	if (fs.existsSync('/dev/ttyAMA0')) {
+	if (fs.existsSync('/dev/ttyAMA0') && config.usettyAMA0 == 1) {
 		ports.push({comName:'/dev/ttyAMA0',manufacturer: undefined,pnpId: 'raspberryPi__GPIO'});
 		console.log('adding /dev/ttyAMA0 because it exists, you may need to enable it - http://www.hobbytronics.co.uk/raspberry-pi-serial-port');
 	}
