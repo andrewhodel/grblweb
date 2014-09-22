@@ -1,4 +1,7 @@
-{ "dependencies" :
+{
+  "name" : "grblweb",
+  "description" : "web based gcode sender for grbl",
+  "dependencies" :
   { "node-static" : "0.7.x"
   , "serialport" : "1.4.x"
   , "socket.io" : "1.0.x"
