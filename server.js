@@ -1,3 +1,22 @@
+/*
+
+    GRBLWeb - a web based CNC controller for GRBL
+    Copyright (C) 2014 Andrew Hodel
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 var config = require('./config');
 var serialport = require("serialport");
 var SerialPort = serialport.SerialPort; // localize object constructor
@@ -54,7 +73,7 @@ serialport.list(function (err, ports) {
 	// if on rPi - http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 	if (fs.existsSync('/dev/ttyAMA0') && config.usettyAMA0 == 1) {
 		ports.push({comName:'/dev/ttyAMA0',manufacturer: undefined,pnpId: 'raspberryPi__GPIO'});
-		console.log('adding /dev/ttyAMA0 because it exists, you may need to enable it - http://www.hobbytronics.co.uk/raspberry-pi-serial-port');
+		console.log('adding /dev/ttyAMA0 because it is enabled in config.js, you may need to enable it in the os - http://www.hobbytronics.co.uk/raspberry-pi-serial-port');
 	}
 
 	allPorts = ports;
@@ -69,14 +88,11 @@ serialport.list(function (err, ports) {
 		sp[i].lastSerialWrite = [];
 		sp[i].lastSerialReadLine = '';
 		// 1 means clear to send, 0 means waiting for response
-		sp[i].canQuestion = 1;
 		sp[i].handle = new SerialPort(ports[i].comName, {
 			parser: serialport.parsers.readline("\n"),
 			baudrate: config.serialBaudRate
 		});
 		sp[i].sockets = [];
-		// flag for first init
-		sp[i].ready = 0;
 
 		sp[i].handle.on("open", function() {
 
@@ -89,14 +105,9 @@ serialport.list(function (err, ports) {
 
 			// loop for status ?
 			setInterval(function() {
-				// if canQuestion is valid or it's a reset
-				if (sp[i].canQuestion == 1 && sp[i].ready == 1) {
-					// only write if we've got a response for the last one
-					// console.log('writing ? to serial');
-					sp[i].canQuestion = 0;
-					sp[i].handle.write('?');
-				}
-			}, 200);
+				// console.log('writing ? to serial');
+				sp[i].handle.write('?');
+			}, 1000);
 
 		});
 
@@ -128,68 +139,58 @@ function serialData(data, port) {
 
 		emitToPortSockets(port, 'machineStatus', {'status':t[0], 'mpos':[t[2], t[3], t[4]], 'wpos':[t[6], t[7], t[8]]});
 
-		sp[port].canQuestion = 1;
-		//console.log('canQuestion again, got valid ? response');
+		return;
+	}
+
+	if (queuePause == 1) {
+		// pause queue
+		return;
+	}
+
+	data = ConvChar(data);
+
+	if (data.indexOf('ok') == 0) {
+
+		// ok is green
+		emitToPortSockets(port, 'serialRead', {'line':'<span style="color: green;">RESP: '+data+'</span>'});
 
 		// run another line from the q
 		if (sp[port].q.length > 0) {
 			// there are remaining lines in the q
 			// write one
-			//sendFirstQ(port);
+			sendFirstQ(port);
 		}
 
-	} else if (data.indexOf('Grbl') == 0) {
-		// this is a valid init
-		sp[port].ready = 1;
+		// remove first
+		sp[port].lastSerialWrite.shift();
+
+	} else if (data.indexOf('error') == 0) {
+
+		// error is red
+		emitToPortSockets(port, 'serialRead', {'line':'<span style="color: red;">RESP: '+data+'</span>'});
+
+		// run another line from the q
+		if (sp[port].q.length > 0) {
+			// there are remaining lines in the q
+			// write one
+			sendFirstQ(port);
+		}
+
+		// remove first
+		sp[port].lastSerialWrite.shift();
 
 	} else {
-
-		data = ConvChar(data);
-
-		if (data.indexOf('ok') == 0) {
-
-			// ok is green
-			emitToPortSockets(port, 'serialRead', {'line':'<span style="color: green;">'+data+'</span>'});
-
-			// run another line from the q
-			if (sp[port].q.length > 0) {
-				// there are remaining lines in the q
-				// write one
-				sendFirstQ(port);
-			}
-
-			// remove first
-			sp[port].lastSerialWrite.shift();
-
-		} else if (data.indexOf('error') == 0) {
-
-			// error is red
-			emitToPortSockets(port, 'serialRead', {'line':'<span style="color: red;">'+data+'</span>'});
-
-			// run another line from the q
-			if (sp[port].q.length > 0) {
-				// there are remaining lines in the q
-				// write one
-				sendFirstQ(port);
-			}
-
-			// remove first
-			sp[port].lastSerialWrite.shift();
-
-		} else {
-			// other is grey
-			emitToPortSockets(port, 'serialRead', {'line':'<span style="color: #888;">'+data+'</span>'});
-		}
-
-		if (sp[port].q.length == 0) {
-			// reset max once queue is done
-			sp[port].qCurrentMax = 0;
-		}
-
-		// update q status
-		emitToPortSockets(port, 'qStatus', {'currentLength':sp[port].q.length, 'currentMax':sp[port].qCurrentMax});
-
+		// other is grey
+		emitToPortSockets(port, 'serialRead', {'line':'<span style="color: #888;">RESP: '+data+'</span>'});
 	}
+
+	if (sp[port].q.length == 0) {
+		// reset max once queue is done
+		sp[port].qCurrentMax = 0;
+	}
+
+	// update q status
+	emitToPortSockets(port, 'qStatus', {'currentLength':sp[port].q.length, 'currentMax':sp[port].qCurrentMax});
 
 	sp[port].lastSerialReadLine = data;
 
@@ -198,54 +199,89 @@ function serialData(data, port) {
 var currentSocketPort = {};
 
 function sendFirstQ(port) {
+
+	if (sp[port].q.length < 1) {
+		// nothing to send
+		return;
+	}
 	var t = sp[port].q.shift();
+
+	// remove any comments after the command
+	tt = t.split(';');
+	t = tt[0];
+	// trim it because we create the \n
+	t = t.trim();
+	if (t == '' || t.indexOf(';') == 0) {
+		// this is a comment or blank line, go to next
+		sendFirstQ(port);
+		return;
+	}
+	//console.log('sending '+t+' ### '+sp[port].q.length+' current q length');
+
 	// loop through all registered port clients
 	for (var i=0; i<sp[port].sockets.length; i++) {
-		sp[port].sockets[i].emit('serialRead', {'line':'<span style="color: black;">'+t+'</span>'+"\n"});
+		sp[port].sockets[i].emit('serialRead', {'line':'<span style="color: black;">SEND: '+t+'</span>'+"\n"});
 	}
 	sp[port].handle.write(t+"\n")
 	sp[port].lastSerialWrite.push(t);
-	sp[port].qCurrentMax = sp[port].q.length;
 }
 
+var queuePause = 0;
 io.sockets.on('connection', function (socket) {
 
 	socket.emit('ports', allPorts);
+
+	// do soft reset, this has it's own clear and direct function call
+	socket.on('doReset', function (data) {
+		// soft reset for grbl, send ctrl-x ascii \030
+		sp[currentSocketPort[socket.id]].handle.write("\030");
+		// reset vars
+		sp[currentSocketPort[socket.id]].q = [];
+		sp[currentSocketPort[socket.id]].qCurrentMax = 0;
+		sp[currentSocketPort[socket.id]].lastSerialWrite = [];
+		sp[currentSocketPort[socket.id]].lastSerialRealLine = '';
+	});
 
 	// lines from web ui
 	socket.on('gcodeLine', function (data) {
 
 		if (typeof currentSocketPort[socket.id] != 'undefined') {
+
 			// valid serial port selected, safe to send
-
-			if (data.line == "\030") {
-
-				// KILL for grbl
-				sp[currentSocketPort[socket.id]].handle.write("\030");
-				// reset vars
-				sp[currentSocketPort[socket.id]].q = [];
-				sp[currentSocketPort[socket.id]].qCurrentMax = 0;
-				sp[currentSocketPort[socket.id]].lastSerialWrite = [];
-				sp[currentSocketPort[socket.id]].lastSerialRealLine = '';
-
-			} else {
-
-				console.log('writing to serial: '+data.line);
-				// split newlines
-					var nl = data.line.split("\n");
-				// add to queue
-				sp[currentSocketPort[socket.id]].q = sp[currentSocketPort[socket.id]].q.concat(nl);
-				if (sp[currentSocketPort[socket.id]].q.length == nl.length) {
-					// there was no previous q so write a line
-					sendFirstQ(currentSocketPort[socket.id]);
-				}
-
+			// split newlines
+			var nl = data.line.split("\n");
+			// add to queue
+			sp[currentSocketPort[socket.id]].q = sp[currentSocketPort[socket.id]].q.concat(nl);
+			// add to qCurrentMax
+			sp[currentSocketPort[socket.id]].qCurrentMax += nl.length;
+			if (sp[currentSocketPort[socket.id]].q.length == nl.length) {
+				// there was no previous q so write a line
+				sendFirstQ(currentSocketPort[socket.id]);
 			}
 
 		} else {
 			socket.emit('serverError', 'you must select a serial port');
 		}
 
+	});
+
+	socket.on('clearQ', function(data) {
+		// clear the command queue
+		sp[currentSocketPort[socket.id]].q = [];
+		// update the status
+		emitToPortSockets(currentSocketPort[socket.id], 'qStatus', {'currentLength':0, 'currentMax':0});
+	});
+
+	socket.on('pause', function(data) {
+		// pause queue
+		if (data == 1) {
+			console.log('pausing queue');
+			queuePause = 1;
+		} else {
+			console.log('unpausing queue');
+			queuePause = 0;
+			sendFirstQ(currentSocketPort[socket.id]);
+		}
 	});
 
 	socket.on('disconnect', function() {

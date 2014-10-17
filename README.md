@@ -1,14 +1,18 @@
 ## About
 
-GRBLweb is a web based GCODE sender and controller for GRBL.  Multiple serial devices can be connected to control multiple machines.
+GRBLWeb is a web based GCODE sender and controller for GRBL.  Multiple serial devices can be connected to control multiple machines.
 
-http://andrewhodel.github.io/grblweb/
+More information can be found at http://xyzbots.com
 
-Copyright 2014 Andrew Hodel andrewhodel@gmail.com under the GPL v2 license available in this directory.
+Copyright 2014 Andrew Hodel andrewhodel@gmail.com under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3
+
+You must share the source of your project and notify the original author via email in plain english if you include or use this code, even if it is included or used as a library on the web.
+
+If you would like to include this code in a project which is not licensed under the AGPL V3, please contact the author at andrewhodel@gmail.com
 
 ## Raspberry Pi prebuilt Image
 
-There is a prebuilt Rasbian image with GRBLweb already running on it at port 80 for 9600 baud GRBL devices.  More information and a link to the .img can be found at http://andrewhodel.github.io/grblweb/
+There is a prebuilt Rasbian image with GRBLWeb already running on it at port 80 for 9600 baud GRBL devices.  More information and a link to the .img can be found at http://xyzbots.com
 
 The ethernet interface will get a DHCP address that you can ssh to.
 
@@ -64,4 +68,4 @@ Read http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 
 Set config.usettyAMA0 to 1 in config.js
 
-This is already enabled on the prebuilt GRBLweb Raspbian image.
+This is already enabled on the prebuilt GRBLWeb Raspbian image.

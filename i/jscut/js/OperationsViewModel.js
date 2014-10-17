@@ -24,7 +24,7 @@ function ToolModel() {
     self.stepover = ko.observable(.4);
     self.rapidRate = ko.observable(100);
     self.plungeRate = ko.observable(5);
-    self.cutRate = ko.observable(40);
+    self.cutRate = ko.observable(30);
 
     self.unitConverter.add(self.diameter);
     self.unitConverter.add(self.passDepth);
@@ -411,6 +411,7 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
     }
 
     self.removeOperation = function (operation) {
+	console.log(operation);
         operation.removeCombinedGeometrySvg();
         operation.removeToolPaths();
         var i = self.operations.indexOf(operation);

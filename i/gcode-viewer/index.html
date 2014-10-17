@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>GCode Viewer</title>
+    <style>
+      #renderArea {
+        background-color: #ffffff;
+	width: 600px;
+	height: 600px;
+	border: 1px solid #333;
+      }
+    </style>
+    <script src="jquery.min.js"></script>
+    <!-- v68 Three.js -->
+    <script src="Three.js"></script>
+    <script src="TrackballControls.js"></script>
+    <script src="gcode-parser.js"></script>
+    <script src="gcode-model.js"></script>
+    <script src="renderer.js"></script>
+    <script src="ui.js"></script>
+
+<script>
+
+$(function() {
+	$.get( "sample.gcode", function( data ) {
+		openGCodeFromText(data);
+	});
+});
+
+</script>
+
+</head>
+<body>
+
+<center>
+<div id="renderArea"></div>
+</center>
+
+</body>
+</html>
