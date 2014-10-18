@@ -8,6 +8,14 @@ Copyright 2014 Andrew Hodel andrewhodel@gmail.com under the GNU AFFERO GENERAL P
 
 You must share the source of your project and notify the original author via email in plain english if you include or use this code, even if it is included or used as a library on the web.
 
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 If you would like to include this code in a project which is not licensed under the AGPL V3, please contact the author at andrewhodel@gmail.com
 
 ## Raspberry Pi prebuilt Image
