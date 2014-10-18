@@ -27,7 +27,7 @@ code {
     padding: 2px;
 }
 
-.table > tbody > tr > td > input[type="number"] {
+.table > tbody > tr > td > input[type="number"], .number {
     width: 60px;
 }
 
@@ -39,6 +39,11 @@ code {
 .combinedGeometry {
     stroke: none;
     fill: #000000;
+}
+
+.tabsGeometry {
+    stroke: none;
+    fill: #ff0000;
 }
 
 .toolPath {

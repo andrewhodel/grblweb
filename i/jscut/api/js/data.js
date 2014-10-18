@@ -91,7 +91,7 @@ jscut.data = jscut.data || {};
             stepover: .4,
             rapidRate: 100,
             plungeRate: 5,
-            cutRate: 30,
+            cutRate: 40,
         }
 
         function fetch(name) {

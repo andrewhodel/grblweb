@@ -15,12 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with jscut.  If not, see <http://www.gnu.org/licenses/>.
 
-var options = {
-    'profile': false,
-};
-
 function MiscViewModel() {
     var self = this;
+    self.enableGoogleDrive = ko.observable(options.enableGoogleDrive);
+    self.enableDropbox = ko.observable(options.enableDropbox);
+    self.debug = ko.observable(options.debug);
+    self.debugArg0 = ko.observable(0);
+    self.debugArg1 = ko.observable(0);
     self.saveSettingsFilename = ko.observable("settings.jscut");
     self.loadLocalStorageFilename = ko.observable("settings.jscut");
     self.launchChiliUrl = ko.observable(null);
@@ -28,6 +29,8 @@ function MiscViewModel() {
     self.savedGistUrl = ko.observable("");
     self.savedGistLaunchUrl = ko.observable("");
     self.localStorageSettings = ko.observableArray([]);
+    self.loadedCamCpp = ko.observable(false);
+    self.camCppError = ko.observable("");
 }
 
 var mainSvg = Snap("#MainSvg");
@@ -35,6 +38,7 @@ var materialSvg = Snap("#MaterialSvg");
 var contentGroup = mainSvg.group();
 contentGroup.attr("filter", mainSvg.filter(Snap.filter.contrast(.5)).attr("filterUnits", "objectBoundingBox"));
 var combinedGeometryGroup = mainSvg.g();
+var tabsGroup = mainSvg.g();
 var toolPathsGroup = mainSvg.g();
 var selectionGroup = mainSvg.g();
 var renderPath;
@@ -44,23 +48,95 @@ var materialViewModel;
 var selectionViewModel;
 var toolModel;
 var operationsViewModel;
+var tabsViewModel;
 var gcodeConversionViewModel;
 var miscViewModel;
 
+function loadScript(path, loadedCallback, errorCallback) {
+    var done = false;
+    var script = document.createElement('script');
+
+    function handleLoad() {
+        if (!done) {
+            done = true;
+            loadedCallback();
+        }
+    }
+
+    function handleReadyStateChange() {
+        var state;
+
+        if (!done) {
+            done = true;
+            if (script.readyState === "complete")
+                loadedCallback();
+            else
+                errorCallback();
+        }
+    }
+
+    function handleError() {
+        if (!done) {
+            done = true;
+            errorCallback();
+        }
+    }
+
+    script.onload = handleLoad;
+    script.onreadystatechange = handleReadyStateChange;
+    script.onerror = handleError;
+    script.src = path;
+    document.body.appendChild(script);
+}
+
+var downloadCppStarted = false;
+var triedPaths = [];
+function downloadCpp() {
+    downloadCppStarted = true;
+    if (options.camCppPaths.length == 0) {
+        console.log('Error: nothing left to try; cam-cpp is unavailable.\n');
+        var e = "cam-cpp.js is unavailable; tried the following paths:<ul>";
+        for (var i = 0; i < triedPaths.length; ++i)
+            e += "<li>" + triedPaths[i] + "</li>";
+        e += "</ul>"
+        miscViewModel.camCppError(e);
+        return;
+    }
+    var nextLocation = options.camCppPaths.shift();
+    var script = nextLocation + "/cam-cpp.js";
+    triedPaths.push(script);
+
+    loadScript(
+        script,
+        function () {
+            console.log('cam-cpp found: ' + script);
+            miscViewModel.loadedCamCpp(true);
+        },
+        downloadCpp);
+}
+window.addEventListener("load", function () {
+    if (!downloadCppStarted)
+        downloadCpp();
+}, false);
+
+miscViewModel = new MiscViewModel();
 svgViewModel = new SvgViewModel();
 materialViewModel = new MaterialViewModel();
 selectionViewModel = new SelectionViewModel(svgViewModel, materialViewModel, selectionGroup);
 toolModel = new ToolModel();
 operationsViewModel = new OperationsViewModel(
-    options, svgViewModel, materialViewModel, selectionViewModel, toolModel, combinedGeometryGroup, toolPathsGroup,
+    miscViewModel, options, svgViewModel, materialViewModel, selectionViewModel, toolModel, combinedGeometryGroup, toolPathsGroup,
     function () { gcodeConversionViewModel.generateGcode(); });
-gcodeConversionViewModel = new GcodeConversionViewModel(options, materialViewModel, toolModel, operationsViewModel);
-miscViewModel = new MiscViewModel();
+tabsViewModel = new TabsViewModel(
+    miscViewModel, options, svgViewModel, materialViewModel, selectionViewModel, tabsGroup,
+    function () { gcodeConversionViewModel.generateGcode(); });
+gcodeConversionViewModel = new GcodeConversionViewModel(options, miscViewModel, materialViewModel, toolModel, operationsViewModel, tabsViewModel);
 
 ko.applyBindings(materialViewModel, $("#Material")[0]);
 ko.applyBindings(selectionViewModel, $("#CurveToLine")[0]);
 ko.applyBindings(toolModel, $("#Tool")[0]);
 ko.applyBindings(operationsViewModel, $("#Operations")[0]);
+ko.applyBindings(tabsViewModel, $("#Tabs")[0]);
 ko.applyBindings(gcodeConversionViewModel, $("#GcodeConversion")[0]);
 ko.applyBindings(gcodeConversionViewModel, $("#FileGetGcode1")[0]);
 ko.applyBindings(gcodeConversionViewModel, $("#simulatePanel")[0]);
@@ -69,6 +145,13 @@ ko.applyBindings(miscViewModel, $("#LaunchChiliPeppr")[0]);
 ko.applyBindings(miscViewModel, $("#save-gist-warning")[0]);
 ko.applyBindings(miscViewModel, $("#save-gist-result")[0]);
 ko.applyBindings(miscViewModel, $("#load-local-storage-settings-modal")[0]);
+ko.applyBindings(miscViewModel, $("#delete-local-storage-settings-modal")[0]);
+ko.applyBindings(miscViewModel, $("#saveSettingsGoogle1")[0]);
+ko.applyBindings(miscViewModel, $("#saveGcodeGoogle1")[0]);
+ko.applyBindings(miscViewModel, $("#openSvgGoogle1")[0]);
+ko.applyBindings(miscViewModel, $("#loadSettingsGoogle1")[0]);
+ko.applyBindings(miscViewModel, $("#openSvgDropbox1")[0]);
+
 
 function updateSvgAutoHeight() {
     $("svg.autoheight").each(function () {
@@ -194,8 +277,7 @@ function openSvgDropbox() {
 $("#MainSvg").click(function (e) {
     var element = Snap.getElementByPoint(e.pageX, e.pageY);
     if (element != null) {
-        operationsViewModel.clickOnSvg(element) ||
-        selectionViewModel.clickOnSvg(element);
+        operationsViewModel.clickOnSvg(element) || tabsViewModel.clickOnSvg(element) || selectionViewModel.clickOnSvg(element);
         if (selectionViewModel.selNumSelected() > 0) {
             tutorial(3, 'Click "Create Operation" after you have finished selecting objects.');
         }
@@ -205,6 +287,7 @@ $("#MainSvg").click(function (e) {
 function makeAllSameUnit(val) {
     "use strict";
     materialViewModel.matUnits(val);
+    tabsViewModel.units(val);
     toolModel.units(val);
     gcodeConversionViewModel.units(val);
 
@@ -225,7 +308,10 @@ function popoverHover(obj, placement, content) {
 
 popoverHover('#pxPerInch', "bottom", "SVG editors use different scales from each other; set this to allow sizes come out correctly.<br><br><table><tr><td>Inkscape:<td>90<tr><td>Adobe Illustrator:<td>72<tr><td>CorelDRAW:<td>96</table>");
 
-popoverHover('#toolDiameter', "right", "Diameter of tool");
+popoverHover('#tabsMaxCutDepth', "right", "Maximum depth operations may cut when they pass over tabs");
+
+popoverHover('#toolDiameter', "right", "Diameter of tool. V Pocket ignores this. Simulate GCODE also ignores Diameter if Angle < 180.");
+popoverHover('#toolAngle', "right", "Angle of V cutter. 180 for normal (flat bottom) tools. V Pocket is the only operation which obeys this. Simulate GCODE always obeys it.");
 popoverHover('#toolPassDepth', "right", "Maximum depth the tool should plunge each pass. Use a smaller pass depth for harder materials and better quality.");
 popoverHover('#toolStepOver', "right", "What fraction of the tool diameter the tool should step over each time around a loop. Smaller values produce better cuts and reduce tool wear, but take longer to complete.");
 popoverHover('#toolRapidRate', "right", "The speed the tool moves while not cutting");
@@ -241,6 +327,7 @@ popoverHover('#inputSelMinSegmentLength', "top", "Minimum length of each line se
 
 popoverHover('#gcodeZeroLowerLeft', "top", "Changes the X and Y Offset values so that 0,0 is at the lower-left corner of all tool paths.");
 popoverHover('#gcodeZeroCenter', "top", "Changes the X and Y Offset values so that 0,0 is at the center of all tool paths.");
+popoverHover('#gcodeReturn00', "top", "Move the tool to 0,0 after the last operation.");
 popoverHover('#gcodeOffsetX', "top", "Amount to add to gcode X coordinates");
 popoverHover('#gcodeOffsetY', "top", "Amount to add to gcode Y coordinates");
 popoverHover('#gcodeMinX', "top", "Minimum X coordinate in gcode. If this is out of range of your machine then adjust X Offset.");
@@ -254,9 +341,18 @@ var operationPopovers = {
     opGenerate: ['top', 'Generate toolpath for operation'],
     opShowDetail: ['top', 'Show additional detail'],
     opName: ['right', 'Name used in gcode comments'],
+    opRamp: ['right', 'Ramp the cutter in gradually instead of plunging straight down'],
+    opCombine: ['right', 'How to combine multiple objects into this operation'],
     opDirection: ['right', 'What direction the cutter should travel'],
     opCutDepth: ['right', 'How deep this operation should cut in total'],
+    opVMaxDepth: ['right', "Maximum depth this operation should cut. <p class='bg-danger'>not implemented yet; this is ignored.</p>"],
     opMargin: ['right', 'Positive: how much material to leave uncut.<br><br>Negative: how much extra material to cut'],
+    opWidth: ['right', 'How wide a path to cut. If this is less than the cutter width then it uses the cutter width.'],
+}
+
+var tabPopovers = {
+    tabEnabled: ['top', 'Whether this tab is enabled'],
+    tabMargin: ['top', 'Positive: how much to expand tab.<br><br>Negative: how much to shrink tab.'],
 }
 
 function hookupOperationPopovers(nodes) {
@@ -266,6 +362,16 @@ function hookupOperationPopovers(nodes) {
         hookupOperationPopovers(node.childNodes);
         if (node.id in operationPopovers)
             popoverHover(node, operationPopovers[node.id][0], operationPopovers[node.id][1]);
+    }
+}
+
+function hookupTabPopovers(nodes) {
+    "use strict";
+    for (var i = 0; i < nodes.length; ++i) {
+        var node = nodes[i];
+        hookupTabPopovers(node.childNodes);
+        if (node.id in tabPopovers)
+            popoverHover(node, tabPopovers[node.id][0], tabPopovers[node.id][1]);
     }
 }
 
@@ -291,6 +397,7 @@ function toJson() {
         'curveToLineConversion': selectionViewModel.toJson(),
         'tool': toolModel.toJson(),
         'operations': operationsViewModel.toJson(),
+        'tabs': tabsViewModel.toJson(),
         'gcodeConversion': gcodeConversionViewModel.toJson(),
     };
 }
@@ -302,6 +409,7 @@ function fromJson(json) {
         selectionViewModel.fromJson(json.curveToLineConversion);
         toolModel.fromJson(json.tool);
         operationsViewModel.fromJson(json.operations);
+        tabsViewModel.fromJson(json.tabs);
         gcodeConversionViewModel.fromJson(json.gcodeConversion);
         updateSvgSize();
     }
@@ -540,6 +648,14 @@ function loadSettingsLocalStorage() {
     alert.remove();
 }
 
+function deleteSettingsLocalStorage() {
+    var settings = JSON.parse(localStorage.getItem("settings"));
+    delete settings[miscViewModel.loadLocalStorageFilename()];
+    localStorage.setItem("settings", JSON.stringify(settings));
+    $('#delete-local-storage-settings-modal').modal('hide');
+    showAlert('Deleted "' + miscViewModel.loadLocalStorageFilename() + '" from browser local storage', "alert-info");
+}
+
 function saveSettingsLocalStorage(callback) {
     var alert = showAlert("Saving settings into browser local storage", "alert-info", false);
     var settings = JSON.parse(localStorage.getItem("settings"));
@@ -705,6 +821,11 @@ function chiliSaveGcode() {
             showAlert("Can't save gcode to http://chilipeppr.com/", "alert-danger");
         });
     });
+}
+
+if (typeof options.preloadInBrowser == 'string' && options.preloadInBrowser.length > 0) {
+    var settings = JSON.parse(localStorage.getItem("settings"));
+    fromJson(settings[options.preloadInBrowser]);
 }
 
 function grblWebSaveGcode() {

@@ -22,6 +22,10 @@ jscut.priv.cam = jscut.priv.cam || {};
 (function () {
     "use strict";
 
+    function dist(x1, y1, x2, y2) {
+        return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+    }
+
     // Does the line from p1 to p2 cross outside of bounds?
     function crosses(bounds, p1, p2) {
         if (bounds == null)
@@ -126,6 +130,38 @@ jscut.priv.cam = jscut.priv.cam || {};
         return mergePaths(bounds, allPaths);
     };
 
+    // Compute paths for pocket operation on Clipper geometry. Returns array
+    // of CamPath. cutterDia is in Clipper units. overlap is in the range [0, 1).
+    jscut.priv.cam.hspocket = function (geometry, cutterDia, overlap, climb) {
+        "use strict";
+
+        var memoryBlocks = [];
+
+        var cGeometry = jscut.priv.path.convertPathsToCpp(memoryBlocks, geometry);
+
+        var resultPathsRef = Module._malloc(4);
+        var resultNumPathsRef = Module._malloc(4);
+        var resultPathSizesRef = Module._malloc(4);
+        memoryBlocks.push(resultPathsRef);
+        memoryBlocks.push(resultNumPathsRef);
+        memoryBlocks.push(resultPathSizesRef);
+
+        //extern "C" void hspocket(
+        //    double** paths, int numPaths, int* pathSizes, double cutterDia,
+        //    double**& resultPaths, int& resultNumPaths, int*& resultPathSizes)
+        Module.ccall(
+            'hspocket',
+            'void', ['number', 'number', 'number', 'number', 'number', 'number', 'number'],
+            [cGeometry[0], cGeometry[1], cGeometry[2], cutterDia, resultPathsRef, resultNumPathsRef, resultPathSizesRef]);
+
+        var result = jscut.priv.path.convertPathsFromCppToCamPath(memoryBlocks, resultPathsRef, resultNumPathsRef, resultPathSizesRef);
+
+        for (var i = 0; i < memoryBlocks.length; ++i)
+            Module._free(memoryBlocks[i]);
+
+        return result;
+    };
+
     // Compute paths for outline operation on Clipper geometry. Returns array
     // of CamPath. cutterDia and width are in Clipper units. overlap is in the 
     // range [0, 1).
@@ -188,6 +224,41 @@ jscut.priv.cam = jscut.priv.cam || {};
         return result;
     };
 
+    jscut.priv.cam.vPocket = function (geometry, cutterAngle, passDepth, maxDepth) {
+        "use strict";
+
+        if (cutterAngle <= 0 || cutterAngle >= 180)
+            return [];
+
+        var memoryBlocks = [];
+
+        var cGeometry = jscut.priv.path.convertPathsToCpp(memoryBlocks, geometry);
+
+        var resultPathsRef = Module._malloc(4);
+        var resultNumPathsRef = Module._malloc(4);
+        var resultPathSizesRef = Module._malloc(4);
+        memoryBlocks.push(resultPathsRef);
+        memoryBlocks.push(resultNumPathsRef);
+        memoryBlocks.push(resultPathSizesRef);
+
+        //extern "C" void vPocket(
+        //    int debugArg0, int debugArg1,
+        //    double** paths, int numPaths, int* pathSizes,
+        //    double cutterAngle, double passDepth, double maxDepth,
+        //    double**& resultPaths, int& resultNumPaths, int*& resultPathSizes)
+        Module.ccall(
+            'vPocket',
+            'void', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'],
+            [miscViewModel.debugArg0(), miscViewModel.debugArg1(), cGeometry[0], cGeometry[1], cGeometry[2], cutterAngle, passDepth, maxDepth, resultPathsRef, resultNumPathsRef, resultPathSizesRef]);
+
+        var result = jscut.priv.path.convertPathsFromCppToCamPath(memoryBlocks, resultPathsRef, resultNumPathsRef, resultPathSizesRef);
+
+        for (var i = 0; i < memoryBlocks.length; ++i)
+            Module._free(memoryBlocks[i]);
+
+        return result;
+    };
+
     // Convert array of CamPath to array of Clipper path
     jscut.priv.cam.getClipperPathsFromCamPaths = function (paths) {
         var result = [];
@@ -197,12 +268,66 @@ jscut.priv.cam = jscut.priv.cam || {};
         return result;
     }
 
+    var displayedCppTabError1 = false;
+    var displayedCppTabError2 = false;
+
+    function separateTabs(cutterPath, tabGeometry) {
+        "use strict";
+
+        if (tabGeometry.length == 0)
+            return [cutterPath];
+        if (typeof Module == 'undefined') {
+            if (!displayedCppTabError1) {
+                showAlert("Failed to load cam-cpp.js; tabs will be missing. This message will not repeat.", "alert-danger", false);
+                displayedCppTabError1 = true;
+            }
+            return cutterPath;
+        }
+
+        var memoryBlocks = [];
+
+        var cCutterPath = jscut.priv.path.convertPathsToCpp(memoryBlocks, [cutterPath]);
+        var cTabGeometry = jscut.priv.path.convertPathsToCpp(memoryBlocks, tabGeometry);
+
+        var errorRef = Module._malloc(4);
+        var resultPathsRef = Module._malloc(4);
+        var resultNumPathsRef = Module._malloc(4);
+        var resultPathSizesRef = Module._malloc(4);
+        memoryBlocks.push(errorRef);
+        memoryBlocks.push(resultPathsRef);
+        memoryBlocks.push(resultNumPathsRef);
+        memoryBlocks.push(resultPathSizesRef);
+
+        //extern "C" void separateTabs(
+        //    double** pathPolygons, int numPaths, int* pathSizes,
+        //    double** tabPolygons, int numTabPolygons, int* tabPolygonSizes,
+        //    bool& error,
+        //    double**& resultPaths, int& resultNumPaths, int*& resultPathSizes)
+        Module.ccall(
+            'separateTabs',
+            'void', ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'],
+            [cCutterPath[0], cCutterPath[1], cCutterPath[2], cTabGeometry[0], cTabGeometry[1], cTabGeometry[2], errorRef, resultPathsRef, resultNumPathsRef, resultPathSizesRef]);
+
+        if (Module.HEAPU32[errorRef >> 2] && !displayedCppTabError2) {
+            showAlert("Internal error processing tabs; tabs will be missing. This message will not repeat.", "alert-danger", false);
+            displayedCppTabError2 = true;
+        }
+
+        var result = jscut.priv.path.convertPathsFromCpp(memoryBlocks, resultPathsRef, resultNumPathsRef, resultPathSizesRef);
+
+        for (var i = 0; i < memoryBlocks.length; ++i)
+            Module._free(memoryBlocks[i]);
+
+        return result;
+    }
+
     // Convert paths to gcode. getGcode() assumes that the current Z position is at safeZ.
     // getGcode()'s gcode returns Z to this position at the end.
     // namedArgs must have:
     //      paths:          Array of CamPath
     //      ramp:           Ramp these paths?
     //      scale:          Factor to convert Clipper units to gcode units
+    //      useZ:           Use Z coordinates in paths? (optional, defaults to false)
     //      offsetX:        Offset X (gcode units)
     //      offsetY:        Offset Y (gcode units)
     //      decimal:        Number of decimal places to keep in gcode
@@ -214,10 +339,13 @@ jscut.priv.cam = jscut.priv.cam || {};
     //      retractFeed:    Feedrate to retract cutter (gcode units)
     //      cutFeed:        Feedrate for horizontal cuts (gcode units)
     //      rapidFeed:      Feedrate for rapid moves (gcode units)
+    //      tabGeometry:    Tab geometry (optional)
+    //      tabZ:           Z position over tabs (required if tabGeometry is not empty) (gcode units)
     jscut.priv.cam.getGcode = function (namedArgs) {
         var paths = namedArgs.paths;
         var ramp = namedArgs.ramp;
         var scale = namedArgs.scale;
+        var useZ = namedArgs.useZ;
         var offsetX = namedArgs.offsetX;
         var offsetY = namedArgs.offsetY;
         var decimal = namedArgs.decimal;
@@ -229,11 +357,26 @@ jscut.priv.cam = jscut.priv.cam || {};
         var retractFeedGcode = ' F' + namedArgs.retractFeed;
         var cutFeedGcode = ' F' + namedArgs.cutFeed;
         var rapidFeedGcode = ' F' + namedArgs.rapidFeed;
+        var tabGeometry = namedArgs.tabGeometry;
+        var tabZ = namedArgs.tabZ;
+
+        if (typeof useZ == 'undefined')
+            useZ = false;
+
+        if (typeof tabGeometry == 'undefined' || tabZ <= botZ) {
+            tabGeometry = [];
+            tabZ = botZ;
+        }
+
         var gcode = "";
 
         var retractGcode =
             '; Retract\r\n' +
             'G1 Z' + safeZ.toFixed(decimal) + rapidFeedGcode + '\r\n';
+
+        var retractForTabGcode =
+            '; Retract for tab\r\n' +
+            'G1 Z' + tabZ.toFixed(decimal) + rapidFeedGcode + '\r\n';
 
         function getX(p) {
             return p.X * scale + offsetX;
@@ -243,77 +386,114 @@ jscut.priv.cam = jscut.priv.cam || {};
             return -p.Y * scale + offsetY;
         }
 
-        function dist(x1, y1, x2, y2) {
-            return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-        }
-
         function convertPoint(p) {
-            return " X" + (p.X * scale + offsetX).toFixed(decimal) + ' Y' + (-p.Y * scale + offsetY).toFixed(decimal);
+            result = ' X' + (p.X * scale + offsetX).toFixed(decimal) + ' Y' + (-p.Y * scale + offsetY).toFixed(decimal);
+            if (useZ)
+                result += ' Z' + (p.Z * scale + topZ).toFixed(decimal);
+            return result;
         }
 
         for (var pathIndex = 0; pathIndex < paths.length; ++pathIndex) {
             var path = paths[pathIndex];
-            if (path.path.length == 0)
+            var origPath = path.path;
+            if (origPath.length == 0)
                 continue;
+            var separatedPaths = separateTabs(origPath, tabGeometry);
+
             gcode +=
                 '\r\n' +
                 '; Path ' + pathIndex + '\r\n';
-            var currentZ = topZ;
-            while (currentZ > botZ) {
-                if (currentZ != topZ && !path.safeToClose)
+
+            var currentZ = safeZ;
+            var finishedZ = topZ;
+            while (finishedZ > botZ) {
+                var nextZ = Math.max(finishedZ - passDepth, botZ);
+                if (currentZ < safeZ && (!path.safeToClose || tabGeometry.length > 0)) {
                     gcode += retractGcode;
+                    currentZ = safeZ;
+                }
+
+                if (tabGeometry.length == 0)
+                    currentZ = finishedZ;
+                else
+                    currentZ = Math.max(finishedZ, tabZ);
                 gcode +=
                     '; Rapid to initial position\r\n' +
-                    'G1' + convertPoint(path.path[0]) + rapidFeedGcode + '\r\n' +
+                    'G1' + convertPoint(origPath[0]) + rapidFeedGcode + '\r\n' +
                     'G1 Z' + currentZ.toFixed(decimal) + '\r\n';
-                var nextZ = Math.max(currentZ - passDepth, botZ);
 
-                var executedRamp = false;
-                if (ramp) {
-                    var minPlungeTime = (currentZ - nextZ) / namedArgs.plungeFeed;
-                    var idealDist = namedArgs.cutFeed * minPlungeTime;
-                    var end;
-                    var totalDist = 0;
-                    for (end = 1; end < path.path.length; ++end) {
-                        if (totalDist > idealDist)
-                            break;
-                        totalDist += 2 * dist(getX(path.path[end - 1]), getY(path.path[end - 1]), getX(path.path[end]), getY(path.path[end]));
-                    }
-                    if (totalDist > 0) {
-                        gcode += '; ramp\r\n'
-                        executedRamp = true;
-                        var rampPath = path.path.slice(0, end).concat(path.path.slice(0, end - 1).reverse());
-                        var distTravelled = 0;
-                        for (var i = 1; i < rampPath.length; ++i) {
-                            distTravelled += dist(getX(rampPath[i - 1]), getY(rampPath[i - 1]), getX(rampPath[i]), getY(rampPath[i]));
-                            var newZ = currentZ + distTravelled / totalDist * (nextZ - currentZ);
-                            gcode += 'G1' + convertPoint(rampPath[i]) + ' Z' + newZ.toFixed(decimal);
-                            if (i == 1)
-                                gcode += ' F' + Math.min(totalDist / minPlungeTime, namedArgs.cutFeed).toFixed(decimal) + '\r\n';
-                            else
-                                gcode += '\r\n';
+                var selectedPaths;
+                if (nextZ >= tabZ || useZ)
+                    selectedPaths = [origPath];
+                else
+                    selectedPaths = separatedPaths;
+
+                for (var selectedIndex = 0; selectedIndex < selectedPaths.length; ++selectedIndex) {
+                    var selectedPath = selectedPaths[selectedIndex];
+                    if (selectedPath.length == 0)
+                        continue;
+
+                    if (!useZ) {
+                        var selectedZ;
+                        if (selectedIndex & 1)
+                            selectedZ = tabZ;
+                        else
+                            selectedZ = nextZ;
+
+                        if (selectedZ < currentZ) {
+                            var executedRamp = false;
+                            if (ramp) {
+                                var minPlungeTime = (currentZ - selectedZ) / namedArgs.plungeFeed;
+                                var idealDist = namedArgs.cutFeed * minPlungeTime;
+                                var end;
+                                var totalDist = 0;
+                                for (end = 1; end < selectedPath.length; ++end) {
+                                    if (totalDist > idealDist)
+                                        break;
+                                    totalDist += 2 * dist(getX(selectedPath[end - 1]), getY(selectedPath[end - 1]), getX(selectedPath[end]), getY(selectedPath[end]));
+                                }
+                                if (totalDist > 0) {
+                                    gcode += '; ramp\r\n'
+                                    executedRamp = true;
+                                    var rampPath = selectedPath.slice(0, end).concat(selectedPath.slice(0, end - 1).reverse());
+                                    var distTravelled = 0;
+                                    for (var i = 1; i < rampPath.length; ++i) {
+                                        distTravelled += dist(getX(rampPath[i - 1]), getY(rampPath[i - 1]), getX(rampPath[i]), getY(rampPath[i]));
+                                        var newZ = currentZ + distTravelled / totalDist * (selectedZ - currentZ);
+                                        gcode += 'G1' + convertPoint(rampPath[i]) + ' Z' + newZ.toFixed(decimal);
+                                        if (i == 1)
+                                            gcode += ' F' + Math.min(totalDist / minPlungeTime, namedArgs.cutFeed).toFixed(decimal) + '\r\n';
+                                        else
+                                            gcode += '\r\n';
+                                    }
+                                }
+                            }
+                            if (!executedRamp)
+                                gcode +=
+                                    '; plunge\r\n' +
+                                    'G1 Z' + selectedZ.toFixed(decimal) + plungeFeedGcode + '\r\n';
+                        } else if (selectedZ > currentZ) {
+                            gcode += retractForTabGcode;
                         }
+                        currentZ = selectedZ;
+                    } // !useZ
+
+                    gcode += '; cut\r\n';
+
+                    for (var i = 1; i < selectedPath.length; ++i) {
+                        gcode += 'G1' + convertPoint(selectedPath[i]);
+                        if (i == 1)
+                            gcode += cutFeedGcode + '\r\n';
+                        else
+                            gcode += '\r\n';
                     }
-                }
-
-                if (!executedRamp)
-                    gcode +=
-                        '; plunge\r\n' +
-                        'G1 Z' + nextZ.toFixed(decimal) + plungeFeedGcode + '\r\n';
-
-                currentZ = nextZ;
-                gcode += '; cut\r\n';
-
-                for (var i = 1; i < path.path.length; ++i) {
-                    gcode += 'G1' + convertPoint(path.path[i]);
-                    if (i == 1)
-                        gcode += cutFeedGcode + '\r\n';
-                    else
-                        gcode += '\r\n';
-                }
-            }
+                } // selectedIndex
+                finishedZ = nextZ;
+                if (useZ)
+                    break;
+            } // while (finishedZ > botZ)
             gcode += retractGcode;
-        }
+        } // pathIndex
 
         return gcode;
     };

@@ -20,11 +20,12 @@ function ToolModel() {
     self.units = ko.observable("inch");
     self.unitConverter = new UnitConverter(self.units);
     self.diameter = ko.observable(.125);
+    self.angle = ko.observable(180);
     self.passDepth = ko.observable(.125);
     self.stepover = ko.observable(.4);
     self.rapidRate = ko.observable(100);
     self.plungeRate = ko.observable(5);
-    self.cutRate = ko.observable(30);
+    self.cutRate = ko.observable(40);
 
     self.unitConverter.add(self.diameter);
     self.unitConverter.add(self.passDepth);
@@ -32,9 +33,15 @@ function ToolModel() {
     self.unitConverter.add(self.plungeRate);
     self.unitConverter.add(self.cutRate);
 
+    self.angle.subscribe(function (newValue) {
+        if (newValue <= 0 || newValue > 180)
+            self.angle(180);
+    });
+
     self.getCamArgs = function () {
         result = {
             diameterClipper: self.diameter.toInch() * jscut.priv.path.inchToClipperScale,
+            passDepthClipper: self.passDepth.toInch() * jscut.priv.path.inchToClipperScale,
             stepover: Number(self.stepover()),
         };
         if (result.diameterClipper <= 0) {
@@ -56,6 +63,7 @@ function ToolModel() {
         return {
             'units': self.units(),
             'diameter': self.diameter(),
+            'angle': self.angle(),
             'passDepth': self.passDepth(),
             'stepover': self.stepover(),
             'rapidRate': self.rapidRate(),
@@ -73,6 +81,7 @@ function ToolModel() {
         if (json) {
             f(json.units, self.units);
             f(json.diameter, self.diameter);
+            f(json.angle, self.angle);
             f(json.passDepth, self.passDepth);
             if (typeof json.overlap !== "undefined") // backwards compat
                 self.stepover(1 - json.overlap);
@@ -84,8 +93,9 @@ function ToolModel() {
     }
 }
 
-function Operation(options, svgViewModel, materialViewModel, operationsViewModel, toolModel, combinedGeometryGroup, toolPathsGroup, rawPaths, toolPathsChanged, loading) {
+function Operation(miscViewModel, options, svgViewModel, materialViewModel, operationsViewModel, toolModel, combinedGeometryGroup, toolPathsGroup, rawPaths, toolPathsChanged, loading) {
     var self = this;
+    self.miscViewModel = miscViewModel;
     self.materialViewModel = materialViewModel;
     self.rawPaths = rawPaths;
     self.showDetail = ko.observable(false);
@@ -189,7 +199,7 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
 
         if (previewGeometry.length != 0) {
             var offset = self.margin.toInch() * jscut.priv.path.inchToClipperScale;
-            if (self.camOp() == "Pocket" || self.camOp() == "Inside")
+            if (self.camOp() == "Pocket" || self.camOp() == "V Pocket" || self.camOp() == "Inside")
                 offset = -offset;
             if (self.camOp() != "Engrave" && offset != 0)
                 previewGeometry = jscut.priv.path.offset(previewGeometry, offset);
@@ -220,10 +230,6 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
         self.enabled(true);
     }
 
-    toolModel.stepover.subscribe(self.removeToolPaths);
-
-    toolModel.diameter.subscribe(self.recombine);
-    svgViewModel.pxPerInch.subscribe(self.recombine);
     self.combineOp.subscribe(self.recombine);
     self.camOp.subscribe(self.recombine);
     self.margin.subscribe(self.recombine);
@@ -245,13 +251,15 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
 
         var geometry = self.combinedGeometry;
         var offset = self.margin.toInch() * jscut.priv.path.inchToClipperScale;
-        if (self.camOp() == "Pocket" || self.camOp() == "Inside")
+        if (self.camOp() == "Pocket" || self.camOp() == "V Pocket" || self.camOp() == "Inside")
             offset = -offset;
         if (self.camOp() != "Engrave" && offset != 0)
             geometry = jscut.priv.path.offset(geometry, offset);
 
         if (self.camOp() == "Pocket")
             self.toolPaths(jscut.priv.cam.pocket(geometry, toolCamArgs.diameterClipper, 1 - toolCamArgs.stepover, self.direction() == "Climb"));
+        else if (self.camOp() == "V Pocket")
+            self.toolPaths(jscut.priv.cam.vPocket(geometry, toolModel.angle(), toolCamArgs.passDepthClipper, self.cutDepth.toInch() * jscut.priv.path.inchToClipperScale, toolCamArgs.stepover, self.direction() == "Climb"));
         else if (self.camOp() == "Inside" || self.camOp() == "Outside") {
             var width = self.width.toInch() * jscut.priv.path.inchToClipperScale;
             if (width < toolCamArgs.diameterClipper)
@@ -294,12 +302,14 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
             'name': self.name(),
             'units': self.units(),
             'enabled': self.enabled(),
-            'ramp': self.ramp(),
             'combineOp': self.combineOp(),
             'camOp': self.camOp(),
-            'direction': self.direction(),
-            'cutDepth': self.cutDepth(),
         };
+        if (self.camOp() != 'V Pocket') {
+            result.direction = self.direction();
+            result.cutDepth = self.cutDepth();
+            result.ramp = self.ramp();
+        }
         if (self.camOp() != 'Engrave')
             result.margin = self.margin();
         if (self.camOp() == 'Inside' || self.camOp() == 'Outside')
@@ -346,7 +356,7 @@ function Operation(options, svgViewModel, materialViewModel, operationsViewModel
     }
 }
 
-function OperationsViewModel(options, svgViewModel, materialViewModel, selectionViewModel, toolModel, combinedGeometryGroup, toolPathsGroup, toolPathsChanged) {
+function OperationsViewModel(miscViewModel, options, svgViewModel, materialViewModel, selectionViewModel, toolModel, combinedGeometryGroup, toolPathsGroup, toolPathsChanged) {
     var self = this;
     self.svgViewModel = svgViewModel;
     self.operations = ko.observableArray();
@@ -354,6 +364,24 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
     self.minY = ko.observable(0);
     self.maxX = ko.observable(0);
     self.maxY = ko.observable(0);
+
+    svgViewModel.pxPerInch.subscribe(function () {
+        var ops = self.operations();
+        for (var i = 0; i < ops.length; ++i)
+            ops[i].recombine();
+    });
+
+    toolModel.stepover.subscribe(function () {
+        var ops = self.operations();
+        for (var i = 0; i < ops.length; ++i)
+            ops[i].removeToolPaths();
+    });
+
+    toolModel.diameter.subscribe(function () {
+        var ops = self.operations();
+        for (var i = 0; i < ops.length; ++i)
+            ops[i].recombine();
+    });
 
     function findMinMax() {
         var minX = 0, maxX = 0, minY = 0, maxY = 0;
@@ -403,7 +431,7 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
             });
         });
         selectionViewModel.clearSelection();
-        var op = new Operation(options, svgViewModel, materialViewModel, self, toolModel, combinedGeometryGroup, toolPathsGroup, rawPaths, toolPathsChanged, false);
+        var op = new Operation(miscViewModel, options, svgViewModel, materialViewModel, self, toolModel, combinedGeometryGroup, toolPathsGroup, rawPaths, toolPathsChanged, false);
         self.operations.push(op);
         op.enabled.subscribe(findMinMax);
         op.toolPaths.subscribe(findMinMax);
@@ -411,7 +439,6 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
     }
 
     self.removeOperation = function (operation) {
-	console.log(operation);
         operation.removeCombinedGeometrySvg();
         operation.removeToolPaths();
         var i = self.operations.indexOf(operation);
@@ -445,7 +472,7 @@ function OperationsViewModel(options, svgViewModel, materialViewModel, selection
             self.operations.removeAll();
 
             for (var i = 0; i < json.operations.length; ++i) {
-                var op = new Operation(options, svgViewModel, materialViewModel, self, toolModel, combinedGeometryGroup, toolPathsGroup, [], toolPathsChanged, true);
+                var op = new Operation(miscViewModel, options, svgViewModel, materialViewModel, self, toolModel, combinedGeometryGroup, toolPathsGroup, [], toolPathsChanged, true);
                 self.operations.push(op);
                 op.fromJson(json.operations[i]);
                 op.enabled.subscribe(findMinMax);

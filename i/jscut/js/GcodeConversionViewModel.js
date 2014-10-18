@@ -15,16 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with jscut.  If not, see <http://www.gnu.org/licenses/>.
 
-function GcodeConversionViewModel(options, materialViewModel, toolModel, operationsViewModel) {
+function GcodeConversionViewModel(options, miscViewModel, materialViewModel, toolModel, operationsViewModel, tabsViewModel) {
     "use strict";
     var self = this;
     var allowGen = true;
+    self.miscViewModel = miscViewModel;
     self.units = ko.observable("mm");
     self.unitConverter = new UnitConverter(self.units);
     self.gcode = ko.observable("");
     self.gcodeFilename = ko.observable("gcode.gcode");
     self.offsetX = ko.observable(0);
     self.offsetY = ko.observable(0);
+    self.returnTo00 = ko.observable(false);
 
     self.unitConverter.add(self.offsetX);
     self.unitConverter.add(self.offsetY);
@@ -82,6 +84,9 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
         var plungeRate = self.unitConverter.fromInch(toolModel.plungeRate.toInch());
         var cutRate = self.unitConverter.fromInch(toolModel.cutRate.toInch());
         var passDepth = self.unitConverter.fromInch(toolModel.passDepth.toInch());
+        var topZ = self.unitConverter.fromInch(materialViewModel.matTopZ.toInch());
+        var tabCutDepth = self.unitConverter.fromInch(tabsViewModel.maxCutDepth.toInch());
+        var tabZ = topZ - tabCutDepth;
 
         if(passDepth <= 0) {
             showAlert("Pass Depth is not greater than 0.", "alert-danger");
@@ -93,7 +98,16 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
             scale = 1 / jscut.priv.path.inchToClipperScale;
         else
             scale = 25.4 / jscut.priv.path.inchToClipperScale;
-        var topZ = self.unitConverter.fromInch(materialViewModel.matTopZ.toInch());
+
+        var tabGeometry = [];
+        for (var i = 0; i < tabsViewModel.tabs().length; ++i) {
+            var tab = tabsViewModel.tabs()[i];
+            if (tab.enabled()) {
+                var offset = toolModel.diameter.toInch() / 2 * jscut.priv.path.inchToClipperScale;
+                var geometry = jscut.priv.path.offset(tab.combinedGeometry, offset);
+                tabGeometry = jscut.priv.path.clip(tabGeometry, geometry, ClipperLib.ClipType.ctUnion);
+            }
+        }
 
         var gcode = "";
         if (self.units() == "inch")
@@ -128,6 +142,7 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
                 paths:          op.toolPaths(),
                 ramp:           op.ramp(),
                 scale:          scale,
+                useZ:           op.camOp() == "V Pocket",
                 offsetX:        Number(self.offsetX()),
                 offsetY:        Number(self.offsetY()),
                 decimal:        4,
@@ -138,9 +153,16 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
                 plungeFeed:     plungeRate,
                 retractFeed:    rapidRate,
                 cutFeed:        cutRate,
-                rapidFeed:      rapidRate
+                rapidFeed:      rapidRate,
+                tabGeometry:    tabGeometry,
+                tabZ:           tabZ,
             });
         }
+
+        if (self.returnTo00())
+            gcode +=
+                "\r\n; Return to 0,0\r\n" +
+                "G0 X0 Y0 F" + rapidRate + "\r\n";
 
         self.gcode(gcode);
 
@@ -152,6 +174,7 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
                 jscut.parseGcode(options, gcode),
                 self.unitConverter.fromInch(materialViewModel.matTopZ.toInch()),
                 self.unitConverter.fromInch(toolModel.diameter.toInch()),
+                toolModel.angle(),
                 self.unitConverter.fromInch(1));
             renderPath.setStopAtTime(renderPath.totalTime);
         }
@@ -161,6 +184,8 @@ function GcodeConversionViewModel(options, materialViewModel, toolModel, operati
 
     self.offsetX.subscribe(self.generateGcode);
     self.offsetY.subscribe(self.generateGcode);
+    self.returnTo00.subscribe(self.generateGcode);
+    toolModel.angle.subscribe(self.generateGcode);
 
     self.toJson = function () {
         return {
