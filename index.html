@@ -1,103 +1,10 @@
-<!doctype html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Grblweb - Web Based GRBL Controller</title>
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="javascripts/respond.js"></script>
-    <!--[if lt IE 9]>
-      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <!--[if lt IE 8]>
-    <link rel="stylesheet" href="stylesheets/ie.css">
-    <![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
   </head>
   <body>
-      <div id="header">
-        <nav>
-          <li class="fork"><a href="https://github.com/andrewhodel/grblweb">View On GitHub</a></li>
-          <li style="margin-left: 20px;" class="fork"><a href="https://github.com/andrewhodel/grblweb/issues">Issues</a></li>
-        </nav>
-      </div><!-- end header -->
-
-    <div class="wrapper">
-
-      <section>
-        <div id="title">
-          <h1>GRBLweb</h1>
-          <p>web based gcode sender for grbl</p>
-          <hr>
-<center>
-<a href="grblweb_ui.png"><img src="grblweb_ui_small.png" /></a>
-<br />
-<p>Now includes <a href="https://github.com/tbfleming/jscut">jscut</a></p>
-<a href="grblweb_jscut_ui.png"><img src="grblweb_jscut_ui_small.png" /></a>
-<br />
-<object width="640" height="360"><param name="movie" value="http://www.youtube.com/v/eUdBWDo_Xe8?version=3&amp;hl=en_US"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/eUdBWDo_Xe8?version=3&amp;hl=en_US" type="application/x-shockwave-flash" width="640" height="360" allowscriptaccess="always" allowfullscreen="true"></embed></object>
-</center>
-
-        </div>
-
-        <h2>
-<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h2>
-
-<p>GRBLweb is a web based GCODE sender and controller for GRBL.  Multiple serial devices can be connected to control multiple machines.</p>
-
-<p>Copyright 2014 Andrew Hodel <a href="mailto:andrewhodel@gmail.com">andrewhodel@gmail.com</a> under the GPL v2 license available in this directory.</p>
-
-<h2>
-<a name="raspberry-pi-prebuilt-image" class="anchor" href="#raspberry-pi-prebuilt-image"><span class="octicon octicon-link"></span></a>Raspberry Pi prebuilt Image</h2>
-
-<p>Here is a prebuilt Rasbian image with GRBLweb already running on it at port 80 for 9600 baud GRBL devices.</p>
-
-<p>
-<a href="http://xyzbots.com/2014-07-15-grblweb-wheezy-raspbian.img">http://xyzbots.com/2014-07-15-grblweb-wheezy-raspbian.img</a>
-</p>
-
-<p>Once you download the image, flash it to the SD card using the following guide - <a href="http://www.raspberrypi.org/documentation/installation/installing-images/README.md">http://www.raspberrypi.org/documentation/installation/installing-images/README.md</a>.</p>
-
-<p>The ethernet interface will get a DHCP address which you can find on your router DHCP client list with a hostname of "raspberrypi".  You access the web interface at this address.</p>
-
-<p>You can also ssh to the device, username pi password raspbian and edit /etc/network/interfaces to use a usb wireless adapter.</p>
-
-<h2>
-<a name="grbl-reading" class="anchor" href="#grbl-reading"><span class="octicon octicon-link"></span></a>GRBL Reading</h2>
-
-<p><a href="https://github.com/grbl/grbl">https://github.com/grbl/grbl</a></p>
-
-<p><a href="https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8">https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8</a></p>
-
-<p><a href="http://onehossshay.wordpress.com/2011/08/21/grbl-how-it-works-and-other-thoughts/">http://onehossshay.wordpress.com/2011/08/21/grbl-how-it-works-and-other-thoughts/</a></p>
-
-<h2>
-<a name="source" class="anchor" href="#source"><span class="octicon octicon-link"></span></a>Source</h2>
-
-<p>You can view the source code as well as more technical information on the <a href="https://github.com/andrewhodel/grblweb">Github Project Page</a></p>
-
-<hr>
-
-          <span class="credits left">Project maintained by <a href="https://github.com/andrewhodel">andrewhodel</a></span>
-          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
-      </section>
-
-    </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-    
 
 <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-40473878-4', 'andrewhodel.github.io');
-  ga('send', 'pageview');
-
+window.location = 'http://xyzbots.com/grblweb.html';
 </script>
 
   </body>
