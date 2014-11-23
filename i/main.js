@@ -211,6 +211,12 @@ $(document).ready(function() {
 			e.preventDefault();
 			$('#zM').click();
 			break;
+//jgc: add spacebar pause function
+		case 32:
+			// spacebar pause
+			e.preventDefault();
+			$('#pause').click();
+			break;
 		}
 	});
 

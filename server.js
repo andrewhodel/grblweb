@@ -239,16 +239,35 @@ io.sockets.on('connection', function (socket) {
 
 	socket.emit('ports', allPorts);
 
+	//JGC: Function to do a reset and clear the queue
+	function clearQueueSendReset(port) {
+		//JGC: First check to see if the socket is connected
+		if (typeof port != 'undefined') {
+
+			//JGC: make sure the machine isn't paused and ignoring data			
+			queuePause = 0; //first we need to unpause the machine so it listens to new data
+			sp[currentSocketPort[socket.id]].handle.write("\176"); 
+
+			// soft reset for grbl, send ctrl-x ascii \030
+			sp[port].handle.write("\030");
+			// reset vars
+			sp[port].q = [];
+			sp[port].qCurrentMax = 0;
+			sp[port].lastSerialWrite = [];
+			sp[port].lastSerialRealLine = '';
+			console.log('performed grbl reset');
+		} else {
+			socket.emit('serverError', 'you must select a serial port');
+		}
+	}	
+	
 	// do soft reset, this has it's own clear and direct function call
 	socket.on('doReset', function (data) {
-		// soft reset for grbl, send ctrl-x ascii \030
-		sp[currentSocketPort[socket.id]].handle.write("\030");
-		// reset vars
-		sp[currentSocketPort[socket.id]].q = [];
-		sp[currentSocketPort[socket.id]].qCurrentMax = 0;
-		sp[currentSocketPort[socket.id]].lastSerialWrite = [];
-		sp[currentSocketPort[socket.id]].lastSerialRealLine = '';
+	
+		//JGC: changed to call a function since I may reuse this code for the clear Queue button
+		clearQueueSendReset(currentSocketPort[socket.id]);
 	});
+	
 
 	// lines from web ui
 	socket.on('gcodeLine', function (data) {
@@ -274,21 +293,56 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('clearQ', function(data) {
-		// clear the command queue
-		sp[currentSocketPort[socket.id]].q = [];
-		// update the status
-		emitToPortSockets(currentSocketPort[socket.id], 'qStatus', {'currentLength':0, 'currentMax':0});
+		
+	 	//JGC: first test to see if the socket is open
+ 		if (typeof currentSocketPort[socket.id] != 'undefined') {
+ 			// clear the command queue
+ 			sp[currentSocketPort[socket.id]].q = [];
+ 			
+ 		} else {
+ 			socket.emit('serverError', 'you must select a serial port');
+ 		}
+ 		// update the status
+ 		emitToPortSockets(currentSocketPort[socket.id], 'qStatus', {'currentLength':0, 'currentMax':0});
+
 	});
 
 	socket.on('pause', function(data) {
 		// pause queue
 		if (data == 1) {
-			console.log('pausing queue');
-			queuePause = 1;
+
+			//JGC: add immediate pause ahead of current grbl queue by sending "!"
+			//JGC: also, we should test to see if the device is connected like the other commands	
+			if (typeof currentSocketPort[socket.id] != 'undefined') {
+
+				console.log('pausing queue');
+				queuePause = 1;
+
+				//JGC: GRBL looks for "!" and executes a pause immediately
+	            sp[currentSocketPort[socket.id]].handle.write("\041");	
+				emitToPortSockets(currentSocketPort[socket.id], 'serialRead', {'line':'<span style="color: purple;">NOTICE:</span> Pausing machine operation.\n'});	
+			} else {
+				socket.emit('serverError', 'you must select a serial port');
+			}
+
 		} else {
-			console.log('unpausing queue');
-			queuePause = 0;
-			sendFirstQ(currentSocketPort[socket.id]);
+		
+		    //JGC: Release the "!" immediate pause by sending "~"
+		    //JGC: also added test to see if a serial port is connected
+			if (typeof currentSocketPort[socket.id] != 'undefined') {
+
+				console.log('unpausing queue');
+				queuePause = 0;
+
+				//JGC: "~" is the GRBL unpause command
+            	sp[currentSocketPort[socket.id]].handle.write("\176");
+	            emitToPortSockets(currentSocketPort[socket.id], 'serialRead', {line:'<span style="color: purple;">NOTICE:</span> Resuming machine operation.\n'});	
+		  		sendFirstQ(currentSocketPort[socket.id]);	
+		  	} else {
+				socket.emit('serverError', 'you must select a serial port');
+			}
+		
+
 		}
 	});
 
