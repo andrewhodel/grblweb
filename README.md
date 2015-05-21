@@ -4,7 +4,7 @@ GRBLWeb is a web based GCODE sender and controller for GRBL.  Multiple serial de
 
 More information can be found at http://xyzbots.com
 
-Copyright 2014 Andrew Hodel andrewhodel@gmail.com under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3
+Copyright 2015 Andrew Hodel andrewhodel@gmail.com under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 
 You must share the source of your project and notify the original author via email in plain english if you include or use this code, even if it is included or used as a library on the web.
 
@@ -20,12 +20,7 @@ If you would like to include this code in a project which is not licensed under 
 
 ## Raspberry Pi prebuilt Image
 
-There is a prebuilt Rasbian image with GRBLWeb already running on it at port 80 for 9600 baud GRBL devices.  More information and a link to the .img can be found at http://xyzbots.com
-
-The ethernet interface will get a DHCP address that you can ssh to.
-
-username: pi
-password: raspbian
+There is a prebuilt Raspberry Pi Image that is fully configured.  More information and a link to the .img can be found at http://xyzbots.com
 
 ## GRBL v.8 vs v.9 and baud rate
 

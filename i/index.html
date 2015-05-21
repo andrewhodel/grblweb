@@ -1,7 +1,7 @@
 <!--
 
     GRBLWeb - a web based CNC controller for GRBL
-    Copyright (C) 2014 Andrew Hodel
+    Copyright (C) 2015 Andrew Hodel
 
     THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
     WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
@@ -236,7 +236,7 @@
 <span style="color: #aaa; font-size: .8em;"><span style="color: red;">axis step hotkeys: </span>WASD, up-arrow, down-arrow</span>
 
 <p style="color: #aaa; font-size: .8em; margin-top: 20px;">
-<a href="http://xyzbots.com">&copy; XYZBots 2014</a>
+<a href="http://xyzbots.com">&copy; XYZBots 2015</a>
 </p>
 
           </ul>
@@ -247,9 +247,20 @@
 <div id="renderArea"></div>
 <pre id="console"></pre>
 <br />
-<textarea style="height: 300px; width: 99%; overflow: auto;" id="command"></textarea>
 
+<div id="webcam" style="float; left; display: none;">
+<img id="wcImg" width="320" height="240" />
+<br />
+<a id="wcLink" target="_blank" href="#">Webcam</a>
+</div>
+
+<div style="float: right;">
+<textarea style="height: 300px; width: 500px; overflow: auto; border: 2px solid orange;" id="command"></textarea>
+</div>
+
+<div style="float: right; clear: both;">
 <span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Upload GCODE to upload it.</span>
+</div>
 
 <div class="input-group" style="clear: both; width: 300px; float: right; text-align: right; margin-top: 10px;">
 <span class="input-group-btn">

@@ -1,7 +1,7 @@
 /*
 
     GRBLWeb - a web based CNC controller for GRBL
-    Copyright (C) 2014 Andrew Hodel
+    Copyright (C) 2015 Andrew Hodel
 
     THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
     WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
@@ -238,6 +238,7 @@ var queuePause = 0;
 io.sockets.on('connection', function (socket) {
 
 	socket.emit('ports', allPorts);
+	socket.emit('config', config);
 
 	// do soft reset, this has it's own clear and direct function call
 	socket.on('doReset', function (data) {

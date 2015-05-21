@@ -1,7 +1,7 @@
 /*
 
     GRBLWeb - a web based CNC controller for GRBL
-    Copyright (C) 2014 Andrew Hodel
+    Copyright (C) 2015 Andrew Hodel
 
     THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
     WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
@@ -42,6 +42,22 @@ $(document).ready(function() {
 		$('#command').val(data.val);
 		openGCodeFromText();
 		alert('new data from jscut');
+	});
+
+	// config from server
+	socket.on('config', function (data) {
+		if (data.showWebCam == true) {
+			// show the webcam and link
+
+			var webroot = window.location.origin.slice(0,-5);
+			//console.log(webroot);
+
+			$('#wcImg').attr('src', webroot+':'+data.webcamPort+'/?action=stream');
+
+			$('#wcLink').attr('href', webroot+':'+data.webcamPort+'/javascript_simple.html');
+
+			$('#webcam').css('display','inline-block');
+		}
 	});
 
 	socket.on('ports', function (data) {
