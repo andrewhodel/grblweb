@@ -49,7 +49,7 @@ $(document).ready(function() {
 		if (data.showWebCam == true) {
 			// show the webcam and link
 
-			var webroot = window.location.origin.slice(0,-5);
+			var webroot = window.location.protocol+'//'+window.location.host;
 			//console.log(webroot);
 
 			$('#wcImg').attr('src', webroot+':'+data.webcamPort+'/?action=stream');

@@ -35,6 +35,24 @@ var static = require('node-static');
 var EventEmitter = require('events').EventEmitter;
 var url = require('url');
 var qs = require('querystring');
+var http = require('http');
+
+// test for webcam
+config.showWebCam = false;
+
+http.get('http://127.0.0.1:8080', function(res) {
+	// valid response, enable webcam
+	console.log('enabling webcam');
+	config.showWebCam = true;
+}).on('socket', function(socket) {
+	// 2 second timeout on this socket
+	socket.setTimeout(2000);
+	socket.on('timeout', function() {
+		this.abort();
+	});
+}).on('error', function(e) {
+	console.log('Got error: '+e.message+' not enabling webcam')
+});
 
 app.listen(config.webPort);
 var fileServer = new static.Server('./i');
