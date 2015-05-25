@@ -88,7 +88,11 @@ $(document).ready(function() {
 	});
 
 	socket.on('serialRead', function (data) {
-		$('#console').append(data.line);
+		if ($('#console p').length > 300) {
+			// remove oldest if already at 300 lines
+			$('#console p').first().remove();
+		}
+		$('#console').append('<p>'+data.line+'</p>');
 		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
 	});
 
