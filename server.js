@@ -96,16 +96,28 @@ var allPorts = [];
 
 serialport.list(function (err, ports) {
 
-	// fix? no ports argument given?
+	// fix? no ports argument given depending on host os?
 	var ports = ports || [];
 
 	// if on rPi - http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 	if (fs.existsSync('/dev/ttyAMA0') && config.usettyAMA0 == 1) {
-		ports.push({comName:'/dev/ttyAMA0',manufacturer: undefined,pnpId: 'raspberryPi__GPIO'});
+		ports.push({
+			comName:'/dev/ttyAMA0',
+			manufacturer: undefined,
+			serialNumber: 'raspberryPi__GPIO'
+		});
 		console.log('adding /dev/ttyAMA0 because it is enabled in config.js, you may need to enable it in the os - http://www.hobbytronics.co.uk/raspberry-pi-serial-port');
 	}
 
-	allPorts = ports;
+	// os x workaround: filter ports to get rid of '/dev/cu.Bluetooth-Incoming-Port' and '/dev/cu.Bluetooth-Modem' on mac hosts
+	// maybe it is better to define a dedicated comName in the config file?
+	for(var i in ports){
+		if (ports[i].serialNumber !== '') {
+			allPorts.push(ports[i]);
+		}
+	}
+
+	ports = allPorts;
 
 	for (var i=0; i<ports.length; i++) {
 	!function outer(i){
