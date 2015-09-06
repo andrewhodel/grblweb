@@ -96,6 +96,9 @@ var allPorts = [];
 
 serialport.list(function (err, ports) {
 
+	// fix? no ports argument given?
+	var ports = ports || [];
+
 	// if on rPi - http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 	if (fs.existsSync('/dev/ttyAMA0') && config.usettyAMA0 == 1) {
 		ports.push({comName:'/dev/ttyAMA0',manufacturer: undefined,pnpId: 'raspberryPi__GPIO'});
