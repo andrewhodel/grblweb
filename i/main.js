@@ -27,6 +27,114 @@
 
 $(document).ready(function() {
 
+	// init vars for better controls
+	var isMouseDown = false;
+	var tsLast = Date.now();
+
+	// get dimensions for better controls
+	var betterWidth = $('#betterControls').width();
+	var betterHeight = $('#betterControls').height();
+	var bPointWidth = $('#betterControlsPoint').width();
+	var bPointHeight = $('#betterControlsPoint').height();
+
+	// track the control mouse position externally
+	var betterX = 0;
+	var betterY = 0;
+
+	// get the scale factor to reduce x and y to a resolution of -1 to 1
+	var xSf = 2/betterWidth;
+	var ySf = 2/betterHeight;
+
+	// center the control point
+	$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
+	$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
+
+	// on mousedown, set isMouseDown to true
+        $('#betterControls').mousedown(function(event) {
+		isMouseDown = true;
+        });
+        document.getElementById('betterControls').addEventListener('touchstart', function(event) {
+		event.preventDefault();
+		isMouseDown = true;
+	}, false);
+
+	// on mouseup reset center point
+        $('#betterControls').mouseup(function(event) {
+		isMouseDown = false;
+		$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
+		$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
+	});
+        document.getElementById('betterControls').addEventListener('touchend', function(event) {
+		event.preventDefault();
+		isMouseDown = false;
+		$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
+		$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
+	});
+
+	// loop for bettercontrol
+	setInterval(function() {
+		if (isMouseDown) {
+
+			var gcX = betterX-(betterWidth/2);
+			var gcY = betterY-(betterHeight/2);
+
+			// add the scale factors
+			gcX = xSf*gcX;
+			gcY = ySf*gcY;
+
+			// invert y axis because JS and CNC are opposite there
+			if (gcY < 0) {
+				gcY = Math.abs(gcY);
+			} else if (gcY > 0) {
+				gcY = -gcY;
+			}
+
+			// first get speed, calculated from the mean of abs(x) and abs(y)
+			//var fSpeed = (Math.abs(gcX)+Math.abs(gcY))/2;
+
+			// first get speed, calculated from the highest abs of x and y
+			if (Math.abs(gcX) > Math.abs(gcY)) {
+				var fSpeed = Math.abs(gcX)*$('#jogSpeed').val();
+			} else {
+				var fSpeed = Math.abs(gcY)*$('#jogSpeed').val();
+			}
+
+			fSpeed = Math.round(fSpeed*100)/100;
+
+			// set final position movements based on #jogSize
+			gcX = Math.round(gcX*$('#jogSize').val()*1000)/1000;
+			gcY = Math.round(gcY*$('#jogSize').val()*1000)/1000;
+
+			// gcode to send
+			socket.emit('gcodeLine', { line: 'G91\nG0 F'+fSpeed+' X'+gcX+' Y'+gcY+'\nG90\n'});
+		}
+	}, 200);
+
+	// on mousemove send gcode
+        $('#betterControls').mousemove(function(event) {
+		if (isMouseDown) {
+				betterX = event.pageX-this.offsetLeft;
+				betterY = event.pageY-this.offsetTop;
+
+				// move point
+				$('#betterControlsPoint').css('top',betterY-(bPointHeight/2) + 'px');
+				$('#betterControlsPoint').css('left',betterX-(bPointWidth/2) + 'px');
+
+		}
+        });
+        document.getElementById('betterControls').addEventListener('touchmove', function(event) {
+		event.preventDefault();
+		if (isMouseDown) {
+				betterX = event.pageX-this.offsetLeft;
+				betterY = event.pageY-this.offsetTop;
+
+				// move point
+				$('#betterControlsPoint').css('top',betterY-(bPointHeight/2) + 'px');
+				$('#betterControlsPoint').css('left',betterX-(bPointWidth/2) + 'px');
+
+		}
+        });
+
 	$( window ).resize(function() {
 		// when header resizes, move ui down
 		$('.table-layout').css('margin-top',$('.navbar-collapse').height()-34);

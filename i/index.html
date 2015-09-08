@@ -184,56 +184,42 @@
 <button type="button" class="btn btn-default" style="margin-top: 5px;" id="sendZero">Zero Machine (G92)</button>
 </center>
 
+
 <hr style="clear: both;" />
+
+<div id="zAxisControl" style="float: right;">
+<button type="button" id="zP" class="btn btn-info btn-sm" style="width: 10px;">&uarr;</button>
+<br />
+<button type="button" id="zM" class="btn btn-info btn-sm" style="width: 10px;">&darr;</button>
+</div>
+
+<div draggable="true" id="betterControls" style="width: 200px; height: 200px; border: 1px solid orange; padding; none; background-color: #fff;">
+<div id="betterControlsPoint" style="position: relative; top: 85px; left: 85px; background-color: red; width: 20px; height: 20px; padding: none;"></div>
+</div>
+
+<br />
 
 <select class="form-control" id="jogSpeed">
 <option value="1500">Feed Rate: 1500</option>
-<option value="1000">Feed Rate: 1000</option>
-<option selected value="500">Feed Rate: 500</option>
+<option selected value="1000">Feed Rate: 1000</option>
+<option value="500">Feed Rate: 500</option>
 <option value="100">Feed Rate: 100</option>
 <option value="5">Feed Rate: 5</option>
 </select>
 
 <select class="form-control" id="jogSize">
+<option value=".5">Distance: .1</option>
 <option value=".5">Distance: .5</option>
-<option selected value="1">Distance: 1</option>
+<option value="1">Distance: 1</option>
 <option value="2">Distance: 2</option>
-<option value="5">Distance: 5</option>
+<option selected value="5">Distance: 5</option>
 <option value="10">Distance: 10</option>
 <option value="20">Distance: 20</option>
 </select>
 
 <br style="clear: both;" />
 
-<div style="clear: both; margin-bottom: 35px;">
-<center>
-<button type="button" id="zP" class="btn btn-info btn-lg" style="width: 70px;">Z+</button>
-</center>
-</div>
-
-<div style="float: right;">
-<div style="float: left;">
-<button type="button" id="xM" class="btn btn-default btn-lg" style="float: left; width: 70px; margin-top: 10px;">X-</button>
-
-<div style="position: relative; top: -30px; float: left; margin: 10px; height: 78px;">
-<button type="button" id="yP" class="btn btn-default btn-lg" style="float: left; width: 70px;">Y+</button>
-<br />
-<button type="button" id="yM" class="btn btn-default btn-lg" style="float: left; width: 70px; margin-top: 10px;">Y-</button>
-</div>
-
-<button type="button" id="xP" class="btn btn-default btn-lg" style="float: left; width: 70px; margin-top: 10px;">X+</button>
-</div>
-</div>
-
-<div style="clear: both; margin-top: 10px;">
-<center>
-<button type="button" id="zM" class="btn btn-info btn-lg" style="width: 70px;">Z-</button>
-</center>
-</div>
-
 <hr style="clear: both;" />
-
-<span style="color: #aaa; font-size: .8em;"><span style="color: red;">axis step hotkeys: </span>WASD, up-arrow, down-arrow</span>
 
 <p style="color: #aaa; font-size: .8em; margin-top: 20px;">
 <a href="http://xyzbots.com">&copy; XYZBots 2015</a>
