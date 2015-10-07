@@ -51,6 +51,7 @@ $(document).ready(function() {
 
 	// on mousedown, set isMouseDown to true
         $('#betterControls').mousedown(function(event) {
+		event.preventDefault();
 		isMouseDown = true;
         });
         document.getElementById('betterControls').addEventListener('touchstart', function(event) {
@@ -60,6 +61,7 @@ $(document).ready(function() {
 
 	// on mouseup reset center point
         $('#betterControls').mouseup(function(event) {
+		event.preventDefault();
 		isMouseDown = false;
 		$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
 		$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
