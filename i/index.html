@@ -107,6 +107,15 @@
     padding: 10px;
 }
 
+#wgbControls thead tr th {
+	font-size: 1.5em;
+	border-bottom: 1px solid gray;
+}
+
+#wgbControls thead tr th:nth-child(2) {
+	border-bottom: none;
+	width: 10px;
+}
 </style>
 
 </head>
@@ -126,16 +135,18 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav navbar-right">
-
-<li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li>
-<li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li>
-<li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblHelp">help ($)</button></li>
+<!-- <li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li> -->
+<li><button type="button" class="btn btn-warning" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li>
+<li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendUnlock">Unlock ($X)</button></li>
+<li><button type="button" class="btn btn-info" style="margin: 10px;" id="sendGrblHelp">help ($)</button></li>
 <li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblSettings">settings ($$)</button></li>
 
           </ul>
         </div>
       </div>
     </div>
+
+<div class="qStatusPct" style="position:absolute; left:48%; color:salmon; font-size:1.5em">0%</div>
 
 <!--
 
@@ -180,18 +191,57 @@
 </center>
 </div>
 
-<center>
+<center style="width:110%; margin-left:-15px;">
 <button type="button" class="btn btn-default" style="margin-top: 5px;" id="sendZero">Zero Machine (G92)</button>
+<button type="button" class="btn btn-default" style="margin-top: 5px;" id="setInches">in</button>
+<button type="button" class="btn btn-default" style="margin-top: 5px;" id="setMillimeters">mm</button>
 </center>
 
 
 <hr style="clear: both;" />
 
-<div id="zAxisControl" style="float: right;">
-<button type="button" id="zP" class="btn btn-info btn-sm" style="width: 10px;">&uarr;</button>
-<br />
-<button type="button" id="zM" class="btn btn-info btn-sm" style="width: 10px;">&darr;</button>
-</div>
+<table id="wgbControls" style="width:200px; height:200px; border: 1px solid orange; padding: 0; background-color:#fff;">
+	<thead>
+		<tr>
+			<th colspan="3">X/Y</th>
+			<th></th>
+			<th>Z</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td></td>
+			<td><button type="button" class="btn btn-sm btn-default" id="yP">&uarr;</button></td>
+			<td></td>
+			<td></td>
+			<td><button type="button" class="btn btn-sm btn-info" id="zP">&uarr;</button></td>
+		</tr>
+		<tr>
+			<td><button type="button" class="btn btn-sm btn-default" id="xM">&larr;</button></td>
+			<td><button type="button" class="btn btn-sm btn-success" id="sendHome">H</button></td>
+			<td><button type="button" class="btn btn-sm btn-default" id="xP">&rarr;</button></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><button type="button" class="btn btn-sm btn-default" id="yM">&darr;</button></td>
+			<td></td>
+			<td></td>
+			<td><button type="button" class="btn btn-sm btn-info" id="zM">&darr;</button></td>
+		</tr>
+		<tr>
+			<td colspan="5">
+				<span style="float:left; margin-left:2px">Incr: <input type="number" id="jogSize" placeholder="0.1" value="0.1" style="width:4em"></span>
+				<span style="float:right; margin-right:2px">Feed: <input type="number" id="jogSpeed" placeholder="100" value="100" style="width:4em"></span>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+
+
+<!--
 
 <div draggable="true" id="betterControls" style="width: 200px; height: 200px; border: 1px solid orange; padding; none; background-color: #fff;">
 <div id="betterControlsPoint" style="position: relative; top: 85px; left: 85px; background-color: red; width: 20px; height: 20px; padding: none;"></div>
@@ -216,6 +266,7 @@
 <option value="10">Distance: 10</option>
 <option value="20">Distance: 20</option>
 </select>
+-->
 
 <br style="clear: both;" />
 

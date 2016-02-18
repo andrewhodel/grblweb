@@ -271,7 +271,6 @@ io.sockets.on('connection', function (socket) {
 
 	// lines from web ui
 	socket.on('gcodeLine', function (data) {
-
 		if (typeof currentSocketPort[socket.id] != 'undefined') {
 
 			// valid serial port selected, safe to send
