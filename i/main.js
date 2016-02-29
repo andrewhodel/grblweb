@@ -40,6 +40,16 @@ $(document).ready(function() {
 		$('.table-layout').css('margin-top',$('.navbar-collapse').height()-34);
 	});
 
+	// Set up powertip and optional location
+	$('[data-powertip]').each(function() {
+		var opts = {};
+
+		if($(this).data('powertippos')!=undefined)
+			opts.placement = $(this).data('powertippos');
+
+		$(this).powerTip(opts);
+	});
+
 	var socket = io.connect('');
 
 	socket.on('serverError', function (data) {

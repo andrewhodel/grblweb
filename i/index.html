@@ -46,6 +46,7 @@ TODO: Mouseover hints/instructions on all buttons
 <script src="jquery.min.js"></script>
 <script src="bootstrap.min.js"></script>
 <script src="main.js"></script>
+<script src="jquery.powertip/jquery.powertip.min.js"></script>
 
 <!-- v68 Three.js -->
 <script src="gcode-viewer/Three.js"></script>
@@ -58,6 +59,7 @@ TODO: Mouseover hints/instructions on all buttons
 <link rel="stylesheet" href="bootstrap.min.css">
 <link rel="stylesheet" href="bootstrap-theme.min.css">
 <link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="jquery.powertip/css/jquery.powertip.min.css">
 
 <style type="text/css">
 @import url('http://getbootstrap.com/dist/css/bootstrap.css');
@@ -290,10 +292,10 @@ td {
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
                 <li><button type="button" class="btn btn-default" id="jsCutButton" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li>
-                <li><button type="button" class="btn btn-warning" id="sendReset">RESET (ctrl-x)</button></li>
-                <li><button type="button" class="btn btn-default" id="sendUnlock">Unlock ($X)</button></li>
-                <li><button type="button" class="btn btn-info" id="sendGrblHelp">Help ($)</button></li>
-                <li><button type="button" class="btn btn-success" id="sendGrblSettings">Settings ($$)</button></li>
+                <li><button type="button" class="btn btn-warning" id="sendReset" data-powertip="Reset Arduino (similar to power off and on)" data-powertippos="se-alt">RESET (ctrl-x)</button></li>
+                <li><button type="button" class="btn btn-default" id="sendUnlock" data-powertip="Unlock machine (in case of Alarm)" data-powertippos="se-alt">Unlock ($X)</button></li>
+                <li><button type="button" class="btn btn-info" id="sendGrblHelp" data-powertip="Send GRBL help command" data-powertippos="se-alt">Help ($)</button></li>
+                <li><button type="button" class="btn btn-success" id="sendGrblSettings" data-powertip="Send GRBL settings command" data-powertippos="se-alt">Settings ($$)</button></li>
             </ul>
         </div>
     </div>
@@ -307,18 +309,18 @@ td {
     <div class="col-md-2">
 		<!-- Serial port selection -->
 		<div class="row">
-			<select id="choosePort" class="form-control">
+			<select id="choosePort" class="form-control" data-powertip="Select the serial port the Arduino is connected to" data-powertippos="sw-alt">
 				<option val="no">Select a serial port</option>
 			</select>
 
-			<button type="button" id="refreshPorts" class="btn btn-sm btn-default">
+			<button type="button" id="refreshPorts" class="btn btn-sm btn-default" data-powertip="Refresh host ports" data-powertippos="sw-alt">
 				<span class="glyphicon glyphicon-refresh"></span>
 			</button>
 		</div>
 
 		<!-- Select Port text -->
 		<div class="row" style="height:2em; vertical-align:middle;">
-            <div id="mTemp"></div>
+            <div id="mTemp" data-powertip="Readings from various sensors", data-powertippos="sw-alt"></div>
 			<div id="mStatus">Select Port</div>
 		</div>
 
@@ -326,10 +328,10 @@ td {
 		<div class="row">
 			<ul class="nav nav-tabs nav-justified" role="tablist">
 				<li id="mpA">
-					<a id="mpC" href="#">Machine Position</a>
+					<a id="mpC" href="#" data-powertip="Position relative to true home (0, 0, 0)" data-powertippos="nw-alt">Machine Position</a>
 				</li>
 				<li id="wpA" class="active">
-					<a id="wpC" href="#">Working Position</a>
+					<a id="wpC" href="#" data-powertip="Position relative to X, Y, Z offsets" data-powertippos="nw-alt">Working Position</a>
 				</li>
 			</ul>
 		</div>
@@ -356,9 +358,9 @@ td {
 		<!-- Machine zero and units of measurement buttons -->
 		<div class="row">
 			<div style="text-align: center; width:110%; margin-left:-5%">
-                <button type="button" class="btn btn-default" id="sendZero">Zero Machine (G92)</button>
-                <button type="button" class="btn btn-default" id="setInches">in</button>
-                <button type="button" class="btn btn-default" id="setMillimeters">mm</button>
+                <button type="button" class="btn btn-default" id="sendZero" data-powertip="Set current position as 0, 0, 0" data-powertippos="sw-alt">Zero Machine (G92)</button>
+                <button type="button" class="btn btn-default" id="setInches" data-powertip="Change working units of measurement to inches" data-powertippos="sw-alt">in</button>
+                <button type="button" class="btn btn-default" id="setMillimeters" data-powertip="Change working units of measurement to millimeters" data-powertippos="sw-alt">mm</button>
             </div>
 		</div>
 
@@ -367,10 +369,10 @@ td {
 		<!-- Job/Probe controls tabs -->
 		<div class="row">
 			<ul class="nav nav-tabs nav-justified" role="tablist" id="controlTabs" style="display:none">
-                <li id="controlTab" class="active">
+                <li id="controlTab" class="active" data-powertip="Jog or move the machine" data-powertippos="nw-alt">
                     <a id="controlTabLink" href="#">Jog<br/>Control</a>
                 </li>
-                <li id="probeTab">
+                <li id="probeTab" data-powertip="Convenient probing controls" data-powertippos="nw-alt">
                     <a id="probeTabLink" href="#">Probe<br/>Control</a>
                 </li>
             </ul>
@@ -400,31 +402,31 @@ td {
             		<tr>
             			<td></td>
             			<td>
-                            <button type="button" class="btn btn-sm btn-default" id="yP">
+                            <button type="button" class="btn btn-sm btn-default" id="yP" data-powertip="Move machine out on Y axis" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-arrow-up"></span>
                             </button>
                         </td>
             			<td></td>
             			<td></td>
             			<td>
-                            <button type="button" class="btn btn-sm btn-info" id="zP">
+                            <button type="button" class="btn btn-sm btn-info" id="zP" data-powertip="Move spindle up on Z axis" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-arrow-up"></span>
                             </button>
                         </td>
             		</tr>
             		<tr>
             			<td>
-                            <button type="button" class="btn btn-sm btn-default" id="xM">
+                            <button type="button" class="btn btn-sm btn-default" id="xM" data-powertip="Move machine left on X axis" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-arrow-left"></span>
                             </button>
                         </td>
             			<td>
-                            <button type="button" class="btn btn-sm btn-success" id="sendHome">
+                            <button type="button" class="btn btn-sm btn-success" id="sendHome" data-powertip="Run homing cycle ($H)" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-home"></span>
                             </button>
                         </td>
             			<td>
-                            <button type="button" class="btn btn-sm btn-default" id="xP">
+                            <button type="button" class="btn btn-sm btn-default" id="xP" data-powertip="Move machine right on left axis" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-arrow-right"></span>
                             </button>
                         </td>
@@ -434,22 +436,22 @@ td {
             		<tr>
             			<td></td>
             			<td>
-                            <button type="button" class="btn btn-sm btn-default" id="yM">
+                            <button type="button" class="btn btn-sm btn-default" id="yM" data-powertip="Move machine in on Y axis" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-arrow-down"></span>
                             </button>
                         </td>
             			<td></td>
             			<td></td>
             			<td>
-                            <button type="button" class="btn btn-sm btn-info" id="zM">
+                            <button type="button" class="btn btn-sm btn-info" id="zM" data-powertip="Move spindle down on Z axis" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-arrow-down"></span>
                             </button>
                         </td>
             		</tr>
             		<tr>
             			<td colspan="5">
-            				<span style="float:left; margin-left:2px">Incr: <input type="number" id="jogSize" style="width:4em"></span>
-            				<span style="float:right; margin-right:2px">Feed: <input type="number" id="jogSpeed" style="width:4em"></span>
+            				<span style="float:left; margin-left:2px" data-powertip="Step increment or distance (in your selected units of measurement) to move with each click" data-powertippos="nw-alt">Incr: <input type="number" id="jogSize" style="width:4em"></span>
+            				<span style="float:right; margin-right:2px" data-powertip="Feed rate or speed (in your selected units of measurement) to move" data-powertippos="nw-alt">Feed: <input type="number" id="jogSpeed" style="width:4em"></span>
             			</td>
             		</tr>
             	</tbody>
@@ -459,7 +461,7 @@ td {
             <table id="probeControls" style="display:none">
                 <tbody>
                     <tr valign="top">
-                        <td colspan="4">
+                        <td colspan="4" data-powertip="The diameter of the bit in the spindle to be used for probing" data-powertippos="nw-alt">
                             <label for="probeBitDiameter">Probe Diameter:</label>
                         	<select id="probeBitDiameter">
                         		<option value="0.79375">1/32"</option>
@@ -478,23 +480,23 @@ td {
                     </tr>
                     <tr valign="top">
                         <td></td>
-                        <td><input id="probeOffsetX" type="number" value="0"></td>
-                        <td><input id="probeOffsetY" type="number" value="0"></td>
-                        <td><input id="probeOffsetZ" type="number" value="0"></td>
+                        <td data-powertip="X axis offset from probed position (relative to working position 0)" data-powertippos="nw-alt"><input id="probeOffsetX" type="number" value="0"></td>
+                        <td data-powertip="Y axis offset from probed position (relative to working position 0)" data-powertippos="nw-alt"><input id="probeOffsetY" type="number" value="0"></td>
+                        <td data-powertip="Z axis offset from probed position (relative to working position 0)" data-powertippos="nw-alt"><input id="probeOffsetZ" type="number" value="0"></td>
                     </tr>
                     <tr>
                         <td>
-                            <button type="button" class="btn btn-sm btn-success" id="probeHomeZero" title="Home and Machine Zero">
+                            <button type="button" class="btn btn-sm btn-success" id="probeHomeZero" title="Home and Machine Zero" data-powertip="Send home command ($H) and set working position to 0, 0, 0" data-powertippos="nw-alt">
                                 <span class="glyphicon glyphicon-home"></span> 0
                             </button>
                         </td>
-                        <td><button type="button" class="btn btn-sm btn-info" id="probeX" title="Probe X">X</button></td>
-                        <td><button type="button" class="btn btn-sm btn-info" id="probeY" title="Probe Y">Y</button></td>
-                        <td><button type="button" class="btn btn-sm btn-info" id="probeZ" title="Probe Z">Z</button></td>
+                        <td><button type="button" class="btn btn-sm btn-info" id="probeX" title="Probe X" data-powertip="Probe X axis and set working position (with offsets)" data-powertippos="nw-alt">X</button></td>
+                        <td><button type="button" class="btn btn-sm btn-info" id="probeY" title="Probe Y" data-powertip="Probe Y axis and set working position (with offsets)" data-powertippos="nw-alt">Y</button></td>
+                        <td><button type="button" class="btn btn-sm btn-info" id="probeZ" title="Probe Z" data-powertip="Probe Z axis and set working position (with offsets)" data-powertippos="nw-alt">Z</button></td>
                     </tr>
                     <tr>
-                        <td><button type="button" class="btn btn-sm btn-default" id="gotoZeroZeroZero" title="Go to 0, 0, 0">0, 0, 0</button></td>
-                        <td colspan="3"><button type="button" class="btn btn-warning" id="probeAll" title="Probe All">Probe All</button></td>
+                        <td><button type="button" class="btn btn-sm btn-default" id="gotoZeroZeroZero" title="Go to 0, 0, 0" data-powertip="Go to working position 0, 0, 0 (after probing is complete)" data-powertippos="nw-alt">0, 0, 0</button></td>
+                        <td colspan="3"><button type="button" class="btn btn-warning" id="probeAll" title="Probe All" data-powertip="Probe all 3 axes and then move a safe distance for probe removal" data-powertippos="nw-alt">Probe All</button></td>
                     </tr>
                 </tbody>
             </table>
@@ -505,7 +507,7 @@ td {
 		</div>
 
 		<div class="row">
-            <a href="http://xyzbots.com" id="XYZURL">&copy; XYZBots 2015</a>
+            <a href="http://xyzbots.com" id="XYZURL" data-powertip="Great folks who started this awesome package" data-powertippos="nw-alt">&copy; XYZBots 2015</a>
 		</div>
     </div>
 
@@ -513,7 +515,7 @@ td {
 	<div class="col-md-6">
 		<!-- Render area -->
 		<div class="row">
-			<div class="areaWrapper">
+			<div class="areaWrapper" data-powertip="Render preview of GCODE" data-powertippos="n">
 				<div id="renderArea"></div>
 			</div>
 		</div>
@@ -521,7 +523,7 @@ td {
 		<!-- Progress bar -->
 		<div class="row">
 			<div class="areaWrapper">
-				<div class="progress">
+				<div class="progress" data-powertip="Percentage completion of GCODE command queue" data-powertippos="s">
 					<div id="queueProgress" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
 				</div>
 			</div>
@@ -530,7 +532,7 @@ td {
 		<!-- Webcam area -->
 		<div class="row">
 			<div class="areaWrapper">
-				<div id="webcam" style="display: none;">
+				<div id="webcam" style="display: none;" data-powertip="Isn't it beautiful?" data-powertippos="n">
 					<img id="wcImg" width="320" height="240" /><br />
 					<a id="wcLink" target="_blank" href="#">Webcam</a>
 				</div>
@@ -545,7 +547,7 @@ td {
 		<div class="row">
 			<div class="areaWrapper">
 				<div id="consoleUnitsOfMeasurement" class="unitsOfMeasurementText"></div>
-				<pre id="console"></pre>
+				<pre id="console" data-powertip="Commands sent and machine responses" data-powertippos="s"></pre>
 			</div>
 		</div>
 
@@ -553,7 +555,7 @@ td {
 		<div class="row">
 			<div class="areaWrapper">
 				<div id="commandUnitsOfMeasurement" class="unitsOfMeasurementText"></div>
-				<textarea id="command"></textarea>
+				<textarea id="command" data-powertip="Commands to be sent to the machine" data-powertippos="n"></textarea>
 			</div>
 		</div>
 
@@ -568,9 +570,9 @@ td {
 		<div class="row">
 			<div class="input-group" style="clear: both; width: 300px; float: right; text-align: right; margin-top: 10px;">
 				<span class="input-group-btn">
-					<button type="button" class="btn btn-default disabled" id="qStatus">0/0</button>
-					<button type="button" class="btn btn-default" id="pause">Pause</button>
-					<button type="button" class="btn btn-default disabled" id="clearQ">Clear Queue</button>
+					<button type="button" class="btn btn-default disabled" id="qStatus" data-powertip="Commands remaining / Commands total" data-powertippos="ne-alt">0/0</button>
+					<button type="button" class="btn btn-default" id="pause" data-powertip="Pause GCODE the queue" data-powertippos="ne-alt">Pause</button>
+					<button type="button" class="btn btn-default disabled" id="clearQ" data-powertip="Clear the GCODE queue" data-powertippos="ne-alt">Clear Queue</button>
 				</span>
 			</div>
 		</div>
@@ -578,8 +580,8 @@ td {
 		<!-- Upload GCODE/Send to CNC buttons -->
 		<div class="row">
 			<div style="clear: both; float: right; margin-top: 10px;">
-				<span class="btn btn-default btn-file">Upload GCODE <input type="file" id="fileInput" /></span>
-				<button type="button" class="btn btn-default" id="sendCommand">Send to CNC (shift+enter)</button>
+				<span class="btn btn-default btn-file" data-powertip="Upload a GCODE file from your computer" data-powertippos="ne-alt">Upload GCODE <input type="file" id="fileInput" /></span>
+				<button type="button" class="btn btn-default" id="sendCommand" data-powertip="Send current GCODE in command text box above to the machine" data-powertippos="ne-alt">Send to CNC (shift+enter)</button>
 			</div>
 		</div>
 	</div>
