@@ -29,7 +29,7 @@ config.jogControlDefaultFeed = 1000;
 config.probeControlXOffset = -0.5;
 
 // Y offset for probe
-config.probeControlYOffset = -1.1;
+config.probeControlYOffset = -1.5;
 
 // Z offset for probe
 config.probeControlZOffset = 3.1;
