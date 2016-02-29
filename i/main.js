@@ -56,11 +56,13 @@ $(document).ready(function() {
 		alert(data);
 	});
 
+
 	socket.on('gcodeFromJscut', function (data) {
 		$('#command').val(data.val);
 		openGCodeFromText();
 		alert('new data from jscut');
 	});
+
 
 	// config from server
 	socket.on('config', function (data) {
@@ -117,6 +119,7 @@ $(document).ready(function() {
 		$('#controlTabLink').click().parent().click();
 	});
 
+
 	socket.on('ports', function (data) {
 		$('#choosePort').html('<option val="no">Select a serial port</option>');
 		for (var i=0; i<data.length; i++) {
@@ -135,6 +138,7 @@ $(document).ready(function() {
 		$('#choosePort').change();
 	});
 
+
 	socket.on('qStatus', function (data) {
 		$('#qStatus').html(data.currentLength+'/'+data.currentMax);
 
@@ -152,6 +156,7 @@ $(document).ready(function() {
 		else
 			$('#queueProgress').removeClass('active');
 	});
+
 
 	socket.on('machineStatus', function (data) {
 		if(data.status.toUpperCase()=='ALARM') {
@@ -430,20 +435,55 @@ $(document).ready(function() {
 	$('#xM').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#xP').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#yP').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#yM').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y-'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#zP').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z'+$('#jogSize').val()+'\nG90'});
+		var distance = parseFloat($('#jogSize').val());
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance*25.4
+
+		if(distance>=config.maxMoveZ)
+			distance = config.maxMoveZ;
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance/25.4;
+
+		// Throw a warning in the console
+		$('#console').append('<p><span style="color:red !important;font-weight:bold">!!!!: Only moved '+distance+lastUnitsOfMeasurement+' due to maxMoveZ safety limit</span></p>');
+		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
+
+		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z'+distance+'\nG90'});
 	});
+
 	$('#zM').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
+		var distance = parseFloat($('#jogSize').val());
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance*25.4
+
+		if(distance>=config.maxMoveZ)
+			distance = config.maxMoveZ;
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance/25.4;
+
+		// Throw a warning in the console
+		$('#console').append('<p><span style="color:red !important;font-weight:bold">!!!!: Only moved '+distance+lastUnitsOfMeasurement+' due to maxMoveZ safety limit</span></p>');
+		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
+
+		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+distance+'\nG90'});
 	});
 
 	// WASD and up/down keys

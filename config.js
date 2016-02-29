@@ -35,6 +35,9 @@ config.probeControlYOffset = -1.5;
 // Z offset for probe
 config.probeControlZOffset = 3.1;
 
+// Maximum you can move Z with any 1 command
+config.maxMoveZ = 50;
+
 // Auto-read temperature
 config.enablePiTemperature = 1;
 config.piTemperatureFahrenheit = 1;
