@@ -1,3 +1,4 @@
+// !!! All values that are distance measures should be entered in millimeters !!!
 
 var config = {};
 
