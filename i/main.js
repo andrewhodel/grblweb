@@ -301,7 +301,6 @@ $(document).ready(function() {
 	});
 
 	$('#probeX').on('click', function() {
-		// var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val()/2);
 		var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val()/2);
 
 		// Remember the units of measurement before we start the probe
@@ -318,7 +317,6 @@ $(document).ready(function() {
 	});
 
 	$('#probeY').on('click', function() {
-		// var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val()/2);
 		var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val()/2);
 
 		// Remember the units of measurement before we start the probe
@@ -351,11 +349,8 @@ $(document).ready(function() {
 	});
 
 	$('#probeAll').on('click', function() {
-		// var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val()/2)+10;
-		// var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val()/2)+10;
-		// var offsetZ = parseFloat($('#probeOffsetZ').val())+10;
-		var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val())+10;
-		var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val())+10;
+		var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val()/2)+10;
+		var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val()/2)+10;
 		var offsetZ = parseFloat($('#probeOffsetZ').val())+10;
 
 		$('#probeZ').click();	// Probe Z
