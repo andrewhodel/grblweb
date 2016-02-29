@@ -1,4 +1,10 @@
 <!--
+TODO: Prevent Z from moving more than 2" when units in inches
+TODO: Cap (or convert) feed rate in inches
+TODO: Mouseover hints/instructions on all buttons
+-->
+
+<!--
 
     GRBLWeb - a web based CNC controller for GRBL
     Copyright (C) 2015 Andrew Hodel
@@ -41,37 +47,26 @@
 <script src="bootstrap.min.js"></script>
 <script src="main.js"></script>
 
-    <!-- v68 Three.js -->
-    <script src="gcode-viewer/Three.js"></script>
-    <script src="gcode-viewer/TrackballControls.js"></script>
-    <script src="gcode-viewer/gcode-parser.js"></script>
-    <script src="gcode-viewer/gcode-model.js"></script>
-    <script src="gcode-viewer/renderer.js"></script>
-    <script src="gcode-viewer/ui.js"></script>
+<!-- v68 Three.js -->
+<script src="gcode-viewer/Three.js"></script>
+<script src="gcode-viewer/TrackballControls.js"></script>
+<script src="gcode-viewer/gcode-parser.js"></script>
+<script src="gcode-viewer/gcode-model.js"></script>
+<script src="gcode-viewer/renderer.js"></script>
+<script src="gcode-viewer/ui.js"></script>
 
 <link rel="stylesheet" href="bootstrap.min.css">
 <link rel="stylesheet" href="bootstrap-theme.min.css">
 <link rel="stylesheet" href="dashboard.css">
 
 <style type="text/css">
-.table-layout {
-    display:table;
-    width:100%;
-    margin-top: 20px;
-}
-.table-layout .table-cell {
-    display:table-cell;
-    vertical-align: top;
-    padding: 10px;
-}
+@import url('http://getbootstrap.com/dist/css/bootstrap.css');
 
-.fixed-width-cell {
-    width:250px;
-}
 .btn-file {
     position: relative;
     overflow: hidden;
 }
+
 .btn-file input[type=file] {
     position: absolute;
     top: 0;
@@ -88,234 +83,489 @@
     display: block;
 }
 
+.areaWrapper {
+	width: 100%;
+	padding: 0 0 1em 1em;
+}
+
+#renderArea,
+#console,
+#command {
+	width: 100%;
+}
+
 #renderArea {
     background-color: #ffffff;
-    width: 49%;
     height: 300px;
     border: 1px solid #333;
-    float: left;
-    margin-right: 1%;
+}
+
+#console,
+#command {
+	position: relative;
+    height: 300px;
+    overflow: auto;
+    text-align: left;
+    padding: 10px;
+	z-index: 100;
+}
+
+#console p span {
+	color: #444 !important;
 }
 
 #console {
-    float: left;
-    height: 300px;
-    width: 49%;
-    overflow: auto;
-    text-align: left;
-    background-color: #ddd;
-    padding: 10px;
+	background-color: rgba(0, 0, 0, 0.1);
 }
 
-#wgbControls thead tr th {
+#command {
+    background-color: rgba(255, 255, 255, 0);
+	border: 2px solid orange;
+}
+
+#commandUnitsOfMeasurement,
+#consoleUnitsOfMeasurement {
+	position: absolute;
+    text-align: center;
+    height: 300px;
+    width: 100%;
+    font-size: 1000%;
+    color: rgba(0, 0, 0, 0.25);
+	z-index: 1;
+	line-height: 300px;
+}
+
+#simpleControls thead tr th {
 	font-size: 1.5em;
 	border-bottom: 1px solid gray;
 }
 
-#wgbControls thead tr th:nth-child(2) {
+#simpleControls thead tr th:nth-child(2) {
 	border-bottom: none;
 	width: 10px;
 }
-</style>
 
+#simpleControls,
+#probeControls {
+    min-width: 230px;
+	width: 100%;
+    height: 230px;
+    border: 1px solid orange;
+    padding: 0;
+    background-color: #fff;
+}
+
+#probeControls {
+    height: 20px;
+    max-height: 230px;
+}
+
+#probeControls td {
+    padding: 2px;
+}
+
+#probeControls input[type="number"] {
+    width: 4em;
+}
+
+
+#mX, #mY, #mZ,
+#wX, #wY, #wZ {
+	text-align: left;
+	padding-left: 15px;
+	margin: 4px;
+	font-size: 30px;
+	width: 100%;
+	border: 1px solid #aaa;
+	font-weight: bold;
+}
+
+#probeHomeZero,
+#probeX,
+#probeY,
+#probeZ,
+#probeAll {
+	width: 100%;
+}
+
+#sendReset,
+#sendUnlock,
+#sendGrblHelp,
+#sendGrblSettings,
+#jsCutButton {
+	margin: 10px;
+}
+
+
+#choosePort {
+	width: 80%;
+	float: left;
+}
+
+#refreshPorts {
+	margin-left: 5px;
+	float: right;
+}
+
+#mStatus {
+    float: right;
+	text-align: right;
+}
+
+#sendZero,
+#setInches,
+#setMillimeters {
+	margin-top: 5px;
+}
+
+#queueProgress {
+	min-width: 2em;
+	color: #000;
+}
+
+#GRBLWebHeader {
+	margin: 0;
+	display: inline;
+}
+
+
+#betterControls {
+	width: 230px;
+	height: 230px;
+	border: 1px solid orange;
+	padding; none;
+	background-color: #fff;
+}
+
+
+#betterControlsPoint {
+	position: relative;
+	top: 100px;
+	left: 100px;
+	background-color: red;
+	width: 20px;
+	height: 20px;
+	padding: none;
+}
+
+#XYZURL {
+	color: #aaa;
+	font-size: 0.8em;
+	margin-top: 20px;
+}
+
+#mTemp {
+    float: left;
+}
+</style>
 </head>
 
 <body>
 
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container-fluid">
+<!-- Top nav bar -->
+<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">GRBLWeb - a web based CNC controller for GRBL</a>
+            <a class="navbar-brand" href="#"><h3 id="GRBLWebHeader">GRBLWeb</h1> - a web based CNC controller for GRBL</a>
         </div>
+
         <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-<!-- <li><button type="button" class="btn btn-default" style="margin: 10px;" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li> -->
-<li><button type="button" class="btn btn-warning" style="margin: 10px;" id="sendReset">RESET (ctrl-x)</button></li>
-<li><button type="button" class="btn btn-default" style="margin: 10px;" id="sendUnlock">Unlock ($X)</button></li>
-<li><button type="button" class="btn btn-info" style="margin: 10px;" id="sendGrblHelp">help ($)</button></li>
-<li><button type="button" class="btn btn-success" style="margin: 10px;" id="sendGrblSettings">settings ($$)</button></li>
-
-          </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><button type="button" class="btn btn-default" id="jsCutButton" onClick="window.open('/jscut/jscut.html','_blank'); return false;">Jscut CAM</button></li>
+                <li><button type="button" class="btn btn-warning" id="sendReset">RESET (ctrl-x)</button></li>
+                <li><button type="button" class="btn btn-default" id="sendUnlock">Unlock ($X)</button></li>
+                <li><button type="button" class="btn btn-info" id="sendGrblHelp">Help ($)</button></li>
+                <li><button type="button" class="btn btn-success" id="sendGrblSettings">Settings ($$)</button></li>
+            </ul>
         </div>
-      </div>
+    </div>
+</div>
+<!-- end top nav bar -->
+
+<br/>
+
+<div class="container-fluid">
+	<!-- Left column -->
+    <div class="col-md-2">
+		<!-- Serial port selection -->
+		<div class="row">
+			<select id="choosePort" class="form-control">
+				<option val="no">Select a serial port</option>
+			</select>
+
+			<button type="button" id="refreshPorts" class="btn btn-sm btn-default">
+				<span class="glyphicon glyphicon-refresh"></span>
+			</button>
+		</div>
+
+		<!-- Select Port text -->
+		<div class="row" style="height:2em; vertical-align:middle;">
+            <div id="mTemp"></div>
+			<div id="mStatus">Select Port</div>
+		</div>
+
+		<!-- Machine/Working position tabs -->
+		<div class="row">
+			<ul class="nav nav-tabs nav-justified" role="tablist">
+				<li id="mpA">
+					<a id="mpC" href="#">Machine Position</a>
+				</li>
+				<li id="wpA" class="active">
+					<a id="wpC" href="#">Working Position</a>
+				</li>
+			</ul>
+		</div>
+
+		<!-- Machine/Working position coordinates -->
+		<div class="row">
+			<div id="mPosition" style="display: none;">
+				<div style="text-align: center">
+					<div id="mX">X: 0.000</div>
+					<div id="mY">Y: 0.000</div>
+					<div id="mZ">Z: 0.000</div>
+				</div>
+			</div>
+
+			<div id="wPosition">
+				<div style="text-align: center">
+					<div id="wX">X: 0.000</div>
+					<div id="wY">Y: 0.000</div>
+					<div id="wZ">Z: 0.000</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Machine zero and units of measurement buttons -->
+		<div class="row">
+			<div style="text-align: center; width:110%; margin-left:-5%">
+                <button type="button" class="btn btn-default" id="sendZero">Zero Machine (G92)</button>
+                <button type="button" class="btn btn-default" id="setInches">in</button>
+                <button type="button" class="btn btn-default" id="setMillimeters">mm</button>
+            </div>
+		</div>
+
+		<hr/>
+
+		<!-- Job/Probe controls tabs -->
+		<div class="row">
+			<ul class="nav nav-tabs nav-justified" role="tablist" id="controlTabs" style="display:none">
+                <li id="controlTab" class="active">
+                    <a id="controlTabLink" href="#">Jog<br/>Control</a>
+                </li>
+                <li id="probeTab">
+                    <a id="probeTabLink" href="#">Probe<br/>Control</a>
+                </li>
+            </ul>
+		</div>
+
+		<!-- Controls -->
+		<div class="row">
+			<!-- Better controls -->
+			<div id="betterControlsWrapper">
+				<div draggable="true" id="betterControls">
+					<div id="betterControlsPoint"></div>
+				</div>
+
+				<br />
+			</div>
+
+			<!-- Simple controls -->
+			<table id="simpleControls" style="display:none">
+            	<thead>
+            		<tr>
+            			<th colspan="3">X/Y</th>
+            			<th></th>
+            			<th>Z</th>
+            		</tr>
+            	</thead>
+            	<tbody>
+            		<tr>
+            			<td></td>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-default" id="yP">
+                                <span class="glyphicon glyphicon-arrow-up"></span>
+                            </button>
+                        </td>
+            			<td></td>
+            			<td></td>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-info" id="zP">
+                                <span class="glyphicon glyphicon-arrow-up"></span>
+                            </button>
+                        </td>
+            		</tr>
+            		<tr>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-default" id="xM">
+                                <span class="glyphicon glyphicon-arrow-left"></span>
+                            </button>
+                        </td>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-success" id="sendHome">
+                                <span class="glyphicon glyphicon-home"></span>
+                            </button>
+                        </td>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-default" id="xP">
+                                <span class="glyphicon glyphicon-arrow-right"></span>
+                            </button>
+                        </td>
+            			<td></td>
+            			<td></td>
+            		</tr>
+            		<tr>
+            			<td></td>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-default" id="yM">
+                                <span class="glyphicon glyphicon-arrow-down"></span>
+                            </button>
+                        </td>
+            			<td></td>
+            			<td></td>
+            			<td>
+                            <button type="button" class="btn btn-sm btn-info" id="zM">
+                                <span class="glyphicon glyphicon-arrow-down"></span>
+                            </button>
+                        </td>
+            		</tr>
+            		<tr>
+            			<td colspan="5">
+            				<span style="float:left; margin-left:2px">Incr: <input type="number" id="jogSize" style="width:4em"></span>
+            				<span style="float:right; margin-right:2px">Feed: <input type="number" id="jogSpeed" style="width:4em"></span>
+            			</td>
+            		</tr>
+            	</tbody>
+            </table>
+
+			<!-- Probe controls -->
+            <table id="probeControls" style="display:none">
+                <tbody>
+                    <tr valign="top">
+                        <td colspan="4">
+                            <label for="probeBitDiameter">Probe Diameter:</label>
+                        	<select id="probeBitDiameter">
+                        		<option value="0.396875">1/32"</option>
+                        		<option value="0.79375">1/16"</option>
+                        		<option selected="selected" value="1.5875">1/8"</option>
+                        		<option value="3.175">1/4"</option>
+                        		<option value="6.35">1/2"</option>
+                        	</select>
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <td><b>Offsets</b></td>
+                        <td><u>X</u></td>
+                        <td><u>Y</u></td>
+                        <td><u>Z</u></td>
+                    </tr>
+                    <tr valign="top">
+                        <td></td>
+                        <td><input id="probeOffsetX" type="number" value="0"></td>
+                        <td><input id="probeOffsetY" type="number" value="0"></td>
+                        <td><input id="probeOffsetZ" type="number" value="0"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-success" id="probeHomeZero" title="Home and Machine Zero">
+                                <span class="glyphicon glyphicon-home"></span> 0
+                            </button>
+                        </td>
+                        <td><button type="button" class="btn btn-sm btn-info" id="probeX" title="Probe X">X</button></td>
+                        <td><button type="button" class="btn btn-sm btn-info" id="probeY" title="Probe Y">Y</button></td>
+                        <td><button type="button" class="btn btn-sm btn-info" id="probeZ" title="Probe Z">Z</button></td>
+                    </tr>
+                    <tr>
+                        <td><button type="button" class="btn btn-sm btn-default" id="gotoZeroZeroZero" title="Go to 0, 0, 0">0, 0, 0</button></td>
+                        <td colspan="3"><button type="button" class="btn btn-warning" id="probeAll" title="Probe All">Probe All</button></td>
+                    </tr>
+                </tbody>
+            </table>
+		</div>
+
+		<div class="row">
+			<hr />
+		</div>
+
+		<div class="row">
+            <a href="http://xyzbots.com" id="XYZURL">&copy; XYZBots 2015</a>
+		</div>
     </div>
 
-<div class="qStatusPct" style="position:absolute; left:48%; color:salmon; font-size:1.5em">0%</div>
+	<!-- Middle Column -->
+	<div class="col-md-6">
+		<!-- Render area -->
+		<div class="row">
+			<div class="areaWrapper">
+				<div id="renderArea"></div>
+			</div>
+		</div>
 
-<!--
+		<!-- Progress bar -->
+		<div class="row">
+			<div class="areaWrapper">
+				<div class="progress">
+					<div id="queueProgress" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+				</div>
+			</div>
+		</div>
 
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
--->
-    <div class="container-fluid">
-      <div class="table-layout">
-        <div class="table-cell fixed-width-cell">
+		<!-- Webcam area -->
+		<div class="row">
+			<div class="areaWrapper">
+				<div id="webcam" style="display: none;">
+					<img id="wcImg" width="320" height="240" /><br />
+					<a id="wcLink" target="_blank" href="#">Webcam</a>
+				</div>
+			</div>
+		</div>
+	</div>
 
-<select id="choosePort" class="form-control">
-<option val="no">Select a serial port</option>
-</select>
 
-<h5 id="mStatus" style="text-align: right;">Select Port</h5>
+	<!-- Right Column -->
+	<div class="col-md-4">
+		<!-- Output console -->
+		<div class="row">
+			<div class="areaWrapper">
+				<div id="consoleUnitsOfMeasurement" class="unitsOfMeasurementText"></div>
+				<pre id="console"></pre>
+			</div>
+		</div>
 
-<ul class="nav nav-tabs nav-justified" role="tablist">
-<li id="mpA">
-<a id="mpC" href="#">Machine Position</a>
-</li>
-<li id="wpA" class="active">
-<a id="wpC" href="#">Working Position</a>
-</li>
-</ul>
+		<!-- Command textarea -->
+		<div class="row">
+			<div class="areaWrapper">
+				<div id="commandUnitsOfMeasurement" class="unitsOfMeasurementText"></div>
+				<textarea id="command"></textarea>
+			</div>
+		</div>
 
-<br />
+		<!-- Gcode upload instructions -->
+		<div class="row">
+			<div style="float: right; clear: both;">
+				<span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Upload GCODE to upload it.</span>
+			</div>
+		</div>
 
-<div id="mPosition" style="display: none;">
-<center>
-<div id="mX" style="text-align: left; padding-left: 15px; margin: 4px; font-size: 30px; width: 190px; border: 1px solid #aaa; font-weight: bold;">X: 0.000</div>
-<div id="mY" style="text-align: left; padding-left: 15px; margin: 4px; font-size: 30px; width: 190px; border: 1px solid #aaa; font-weight: bold;">Y: 0.000</div>
-<div id="mZ" style="text-align: left; padding-left: 15px; margin: 4px; font-size: 30px; width: 190px; border: 1px solid #aaa; font-weight: bold;">Z: 0.000</div>
-</center>
+		<!-- Queue status/Pause/Clear Queue buttons -->
+		<div class="row">
+			<div class="input-group" style="clear: both; width: 300px; float: right; text-align: right; margin-top: 10px;">
+				<span class="input-group-btn">
+					<button type="button" class="btn btn-default disabled" id="qStatus">0/0</button>
+					<button type="button" class="btn btn-default" id="pause">Pause</button>
+					<button type="button" class="btn btn-default disabled" id="clearQ">Clear Queue</button>
+				</span>
+			</div>
+		</div>
+
+		<!-- Upload GCODE/Send to CNC buttons -->
+		<div class="row">
+			<div style="clear: both; float: right; margin-top: 10px;">
+				<span class="btn btn-default btn-file">Upload GCODE <input type="file" id="fileInput" /></span>
+				<button type="button" class="btn btn-default" id="sendCommand">Send to CNC (shift+enter)</button>
+			</div>
+		</div>
+	</div>
 </div>
-
-<div id="wPosition">
-<center>
-<div id="wX" style="text-align: left; padding-left: 15px; margin: 4px; font-size: 30px; width: 190px; border: 1px solid #aaa; font-weight: bold;">X: 0.000</div>
-<div id="wY" style="text-align: left; padding-left: 15px; margin: 4px; font-size: 30px; width: 190px; border: 1px solid #aaa; font-weight: bold;">Y: 0.000</div>
-<div id="wZ" style="text-align: left; padding-left: 15px; margin: 4px; font-size: 30px; width: 190px; border: 1px solid #aaa; font-weight: bold;">Z: 0.000</div>
-</center>
-</div>
-
-<center style="width:110%; margin-left:-15px;">
-<button type="button" class="btn btn-default" style="margin-top: 5px;" id="sendZero">Zero Machine (G92)</button>
-<button type="button" class="btn btn-default" style="margin-top: 5px;" id="setInches">in</button>
-<button type="button" class="btn btn-default" style="margin-top: 5px;" id="setMillimeters">mm</button>
-</center>
-
-
-<hr style="clear: both;" />
-
-<table id="wgbControls" style="width:200px; height:200px; border: 1px solid orange; padding: 0; background-color:#fff;">
-	<thead>
-		<tr>
-			<th colspan="3">X/Y</th>
-			<th></th>
-			<th>Z</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td></td>
-			<td><button type="button" class="btn btn-sm btn-default" id="yP">&uarr;</button></td>
-			<td></td>
-			<td></td>
-			<td><button type="button" class="btn btn-sm btn-info" id="zP">&uarr;</button></td>
-		</tr>
-		<tr>
-			<td><button type="button" class="btn btn-sm btn-default" id="xM">&larr;</button></td>
-			<td><button type="button" class="btn btn-sm btn-success" id="sendHome">H</button></td>
-			<td><button type="button" class="btn btn-sm btn-default" id="xP">&rarr;</button></td>
-			<td></td>
-			<td></td>
-		</tr>
-		<tr>
-			<td></td>
-			<td><button type="button" class="btn btn-sm btn-default" id="yM">&darr;</button></td>
-			<td></td>
-			<td></td>
-			<td><button type="button" class="btn btn-sm btn-info" id="zM">&darr;</button></td>
-		</tr>
-		<tr>
-			<td colspan="5">
-				<span style="float:left; margin-left:2px">Incr: <input type="number" id="jogSize" placeholder="0.1" value="0.1" style="width:4em"></span>
-				<span style="float:right; margin-right:2px">Feed: <input type="number" id="jogSpeed" placeholder="100" value="100" style="width:4em"></span>
-			</td>
-		</tr>
-	</tbody>
-</table>
-
-
-
-<!--
-
-<div draggable="true" id="betterControls" style="width: 200px; height: 200px; border: 1px solid orange; padding; none; background-color: #fff;">
-<div id="betterControlsPoint" style="position: relative; top: 85px; left: 85px; background-color: red; width: 20px; height: 20px; padding: none;"></div>
-</div>
-
-<br />
-
-<select class="form-control" id="jogSpeed">
-<option value="1500">Feed Rate: 1500</option>
-<option selected value="1000">Feed Rate: 1000</option>
-<option value="500">Feed Rate: 500</option>
-<option value="100">Feed Rate: 100</option>
-<option value="5">Feed Rate: 5</option>
-</select>
-
-<select class="form-control" id="jogSize">
-<option value=".5">Distance: .1</option>
-<option value=".5">Distance: .5</option>
-<option value="1">Distance: 1</option>
-<option value="2">Distance: 2</option>
-<option selected value="5">Distance: 5</option>
-<option value="10">Distance: 10</option>
-<option value="20">Distance: 20</option>
-</select>
--->
-
-<br style="clear: both;" />
-
-<hr style="clear: both;" />
-
-<p style="color: #aaa; font-size: .8em; margin-top: 20px;">
-<a href="http://xyzbots.com">&copy; XYZBots 2015</a>
-</p>
-
-          </ul>
-        </div>
-        <!--<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">-->
-        <div class="table-cell">
-
-<div id="renderArea"></div>
-<pre id="console"></pre>
-<br />
-
-<div id="webcam" style="float; left; display: none;">
-<img id="wcImg" width="320" height="240" />
-<br />
-<a id="wcLink" target="_blank" href="#">Webcam</a>
-</div>
-
-<div style="float: right;">
-<textarea style="height: 300px; width: 500px; overflow: auto; border: 2px solid orange;" id="command"></textarea>
-</div>
-
-<div style="float: right; clear: both;">
-<span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Upload GCODE to upload it.</span>
-</div>
-
-<div class="input-group" style="clear: both; width: 300px; float: right; text-align: right; margin-top: 10px;">
-<span class="input-group-btn">
-<button type="button" class="btn btn-default disabled" id="qStatus">0/0</button>
-<button type="button" class="btn btn-default" id="pause">Pause</button>
-<button type="button" class="btn btn-default disabled" id="clearQ">Clear Queue</button>
-</span>
-</div><!-- /input-group -->
-
-<div style="clear: both; float: right; margin-top: 10px;">
-<span class="btn btn-default btn-file">Upload GCODE <input type="file" id="fileInput" /></span>
-<button type="button" class="btn btn-default" id="sendCommand">Send to CNC (shift+enter)</button>
-</div>
-
-          </div>
-        </div>
-      </div>
-    </div>
 
 </body>
 </html>

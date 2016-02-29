@@ -1,9 +1,10 @@
 {
-  "name" : "grblweb",
-  "description" : "web based gcode sender for grbl",
-  "dependencies" :
-  { "node-static" : "0.7.x"
-  , "serialport" : "2.0.x"
-  , "socket.io" : "1.0.x"
+  "name": "grblweb",
+  "description": "web based gcode sender for grbl",
+  "dependencies": {
+    "node-static": "0.7.x",
+    "require-reload": "^0.2.2",
+    "serialport": "2.0.x",
+    "socket.io": "1.0.x"
   }
 }
