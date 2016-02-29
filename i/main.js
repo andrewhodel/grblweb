@@ -102,6 +102,9 @@ $(document).ready(function() {
 		// Fill in default Z offset for probe
 		if(data.probeControlZOffset!=undefined)
 			$('#probeOffsetZ').val(data.probeControlZOffset).attr('placeholder', data.probeControlZOffset);
+
+		// "Click" the "Jog Control" tab
+		$('#controlTabLink').click().parent().click();
 	});
 
 	socket.on('ports', function (data) {
