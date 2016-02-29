@@ -183,17 +183,30 @@ $(document).ready(function() {
 
 		// Only attempt to change things if the unit of measurement has changed
 		if(data.unitsOfMeasurement!=lastUnitsOfMeasurement) {
-			lastUnitsOfMeasurement = data.unitsOfMeasurement;
+			$('.unitsOfMeasurementText').text(data.unitsOfMeasurement);
 
-			$('.unitsOfMeasurementText').text(lastUnitsOfMeasurement);
+			// Values for jog options
+			var step_incr = parseFloat($('#jogSize').val());
+			var step_feed = parseFloat($('#jogSpeed').val());
 
 			if(data.unitsOfMeasurement.toUpperCase()=='IN') {
 				$('#setInches').addClass('btn-primary');
 				$('#setMillimeters').removeClass('btn-primary');
+
+				$('#jogSize').val(step_incr/25.4);
+				$('#jogSpeed').val(step_feed/25.4);
 			} else if(data.unitsOfMeasurement.toUpperCase()=='MM') {
 				$('#setInches').removeClass('btn-primary');
 				$('#setMillimeters').addClass('btn-primary');
+
+				// Don't do any conversion if this is the first page load
+				if(lastUnitsOfMeasurement!='') {
+					$('#jogSize').val(step_incr*25.4);
+					$('#jogSpeed').val(step_feed*25.4);
+				}
 			}
+
+			lastUnitsOfMeasurement = data.unitsOfMeasurement;
 		}
 	});
 
