@@ -4,7 +4,7 @@
   "dependencies": {
     "node-static": "0.7.x",
     "require-reload": "^0.2.2",
-    "serialport": "2.0.x",
+    "serialport": "4.0.x",
     "socket.io": "1.0.x"
   }
 }

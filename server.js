@@ -30,7 +30,7 @@
 */
 
 var reload = require('require-reload')(require);
-var config = reload('./config.js');
+//var config = reload('./config.js');
 var config = require('./config');
 var serialport = require("serialport");
 var SerialPort = serialport.SerialPort; // localize object constructor
@@ -48,6 +48,7 @@ config.showWebCam = false;
 
 
 // Monitor config.js for changes
+/*
 fs.watch('./config.js', function(e, f) {
 	console.log('config.js changed, reloading');
     console.log('config: '+JSON.stringify(config));
@@ -57,6 +58,7 @@ fs.watch('./config.js', function(e, f) {
 	for(var i in io.sockets.connected)
 		io.sockets.connected[i].emit('config', config);
 });
+*/
 
 
 http.get('http://127.0.0.1:8080', function(res) {
@@ -97,7 +99,7 @@ function handler (req, res) {
 		});
 	} else {
 		fileServer.serve(req, res, function (err, result) {
-			if (err) console.log('fileServer error: ',err);
+			if (err) console.log('fileServer error: ', err, req.url);
 		});
 	}
 }
@@ -150,7 +152,8 @@ function doSerialPortList() {
 
     			// loop for status ?
     			setInterval(function() {
-    				sp[i].handle.write('?');
+    				sp[i].handle.write('?', function(err) {
+					});
     			}, 1000);
 
     		});

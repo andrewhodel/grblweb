@@ -18,7 +18,7 @@ config.enableSimpleControls = 1;
 config.enableProbeControls = 1;
 
 // Enable jsCut
-config.enableJsCut = 0;
+config.enableJsCut = 1;
 
 // Default step increment for jogging
 config.jogControlDefaultIncr = 0.1;
@@ -39,7 +39,7 @@ config.probeControlZOffset = 3.1;
 config.maxMoveZ = 50;
 
 // Auto-read temperature
-config.enablePiTemperature = 1;
+config.enablePiTemperature = 0;
 config.piTemperatureFahrenheit = 1;
 config.piTemperatureFile = [
     '/sys/class/thermal/thermal_zone0/temp',
