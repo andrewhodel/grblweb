@@ -33,7 +33,6 @@ var reload = require('require-reload')(require);
 //var config = reload('./config.js');
 var config = require('./config');
 var serialport = require("serialport");
-var SerialPort = serialport.SerialPort; // localize object constructor
 var app = require('http').createServer(handler)
   , io = require('socket.io').listen(app)
   , fs = require('fs');
@@ -136,7 +135,7 @@ function doSerialPortList() {
 			sp[i].lastSerialWrite = [];
 			sp[i].lastSerialReadLine = '';
 			// 1 means clear to send, 0 means waiting for response
-			sp[i].handle = new SerialPort(ports[i].comName, {
+			sp[i].handle = new serialport(ports[i].comName, {
 				parser: serialport.parsers.readline("\n"),
 				baudrate: config.serialBaudRate
 			});

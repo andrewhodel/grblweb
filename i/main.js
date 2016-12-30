@@ -53,7 +53,7 @@ $(document).ready(function() {
 	var socket = io.connect('');
 
 	socket.on('serverError', function (data) {
-		alert(data);
+		console.log(data);
 	});
 
 
@@ -392,6 +392,22 @@ $(document).ready(function() {
 
 	$('#sendZero').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
+		socket.emit('gcodeLine', { line: 'G28.1' });
+	});
+
+	$('#sendZeroX').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 X0' });
+		socket.emit('gcodeLine', { line: 'G28.1 X0' });
+	});
+
+	$('#sendZeroY').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 Y0' });
+		socket.emit('gcodeLine', { line: 'G28.1 Y0' });
+	});
+
+	$('#sendZeroZ').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 Z0' });
+		socket.emit('gcodeLine', { line: 'G28.1 Z0' });
 	});
 
 	$('#setInches').on('click', function() {
