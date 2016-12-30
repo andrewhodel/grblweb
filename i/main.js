@@ -188,7 +188,8 @@ $(document).ready(function() {
 
 		// Only attempt to change things if the unit of measurement has changed
 		if(data.unitsOfMeasurement!=lastUnitsOfMeasurement) {
-			$('.unitsOfMeasurementText').text(data.unitsOfMeasurement);
+			if (config.showUnitsBackdrop)
+				$('.unitsOfMeasurementText').text(data.unitsOfMeasurement);
 
 			// Values for jog options
 			var step_incr = parseFloat($('#jogSize').val());

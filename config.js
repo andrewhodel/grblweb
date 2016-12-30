@@ -9,16 +9,16 @@ config.webPort = 8000;
 config.serialBaudRate = 115200;
 
 // Use /dev/ttyAMA0
-config.usettyAMA0 = 1;
+config.usettyAMA0 = true;
 
 // Enable simple jog controls
-config.enableSimpleControls = 1;
+config.enableSimpleControls = true;
 
 // Enable probe controls
-config.enableProbeControls = 1;
+config.enableProbeControls = true;
 
 // Enable jsCut
-config.enableJsCut = 1;
+config.enableJsCut = true;
 
 // Default step increment for jogging
 config.jogControlDefaultIncr = 0.1;
@@ -39,12 +39,14 @@ config.probeControlZOffset = 3.1;
 config.maxMoveZ = 50;
 
 // Auto-read temperature
-config.enablePiTemperature = 0;
-config.piTemperatureFahrenheit = 1;
+config.enablePiTemperature = false;
+config.piTemperatureFahrenheit = true;
 config.piTemperatureFile = [
     '/sys/class/thermal/thermal_zone0/temp',
     '/sys/bus/w1/devices/28-000002aa87dd/w1_slave'
 ];
+
+config.showUnitsBackdrop = false;
 
 // TO DO:
 // - Add probe diameters
