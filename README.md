@@ -18,6 +18,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 If you would like to include this code in a project which is not licensed under the AGPL V3, please contact the author at andrewhodel@gmail.com
 
+## additional credits
+This repo is a mixture of the above repo, and work done by bryanchanrobot
+https://github.com/wgbartley/grblweb
+https://github.com/brychanrobot/grblweb
+
 ## Raspberry Pi prebuilt Image
 
 There is a prebuilt Raspberry Pi Image that is fully configured.  More information and a link to the .img can be found at http://xyzbots.com
@@ -75,3 +80,9 @@ Read http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 Set config.usettyAMA0 to 1 in config.js
 
 This is already enabled on the prebuilt GRBLWeb Raspbian image.
+
+## Fixes
+script is looking for mjpg port again
+camera viewport readded to main screen
+minjs stuff is included again (have to check to see if that's actually "ok" or if I need to point to downloads there as well)
+USB serial port is available for selection
