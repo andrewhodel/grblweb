@@ -58,6 +58,9 @@ node server.js
 npm install -g forever
 forever start server.js
 ```
+## Camera
+you'll presently need to install mjpg-streamer, working on something more integrated, but no promises
+https://github.com/jacksonliam/mjpg-streamer
 
 ## Access
 
