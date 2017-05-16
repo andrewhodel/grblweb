@@ -86,3 +86,7 @@ script is looking for mjpg port again
 camera viewport readded to main screen
 minjs stuff is included again (have to check to see if that's actually "ok" or if I need to point to downloads there as well)
 USB serial port is available for selection
+
+## dev setup
+raspi V1 - raspi camera - linksprite 3 axis CNC 
+http://linksprite.com/wiki/index.php5?title=DIY_CNC_3_Axis_Engraver_Machine_PCB_Milling_Wood_Carving_Router_Kit_Arduino_Grbl
