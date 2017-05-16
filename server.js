@@ -29,10 +29,11 @@
 
 */
 
-var reload = require('require-reload')(require);
+//var reload = require('require-reload')(require);
 //var config = reload('./config.js');
 var config = require('./config');
 var serialport = require("serialport");
+var SerialPort = serialport.SerialPort;
 var app = require('http').createServer(handler)
   , io = require('socket.io').listen(app)
   , fs = require('fs');
@@ -60,16 +61,16 @@ fs.watch('./config.js', function(e, f) {
 */
 
 
-http.get('http://127.0.0.1:8080', function(res) {
+http.get('http://127.0.0.1:8080/?action=snapshot', function(res) {
 	// valid response, enable webcam
 	console.log('enabling webcam');
 	config.showWebCam = true;
 }).on('socket', function(socket) {
 	// 2 second timeout on this socket
 	socket.setTimeout(2000);
-	socket.on('timeout', function() {
-		this.abort();
-	});
+	//socket.on('timeout', function() {
+	//	this.abort();
+	//});
 }).on('error', function(e) {
 	console.log('Got error: '+e.message+' not enabling webcam')
 });
@@ -135,7 +136,10 @@ function doSerialPortList() {
 			sp[i].lastSerialWrite = [];
 			sp[i].lastSerialReadLine = '';
 			// 1 means clear to send, 0 means waiting for response
-			sp[i].handle = new serialport(ports[i].comName, {
+			//console.log(ports[i].comName);
+			//console.log(serialport.parsers.readline("\n"));
+			//console.log(config.serialBaudRate);
+			sp[i].handle = new SerialPort(ports[i].comName, {
 				parser: serialport.parsers.readline("\n"),
 				baudrate: config.serialBaudRate
 			});

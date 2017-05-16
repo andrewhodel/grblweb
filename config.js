@@ -3,19 +3,19 @@
 var config = {};
 
 // Port to listen on for web site
-config.webPort = 8000;
+config.webPort = 80;
 
 // Serial baud rate to Arduino
 config.serialBaudRate = 115200;
 
 // Use /dev/ttyAMA0
-config.usettyAMA0 = true;
+config.usettyAMA0 = 0;
 
 // Enable simple jog controls
-config.enableSimpleControls = true;
+config.enableSimpleControls = 1;
 
 // Enable probe controls
-config.enableProbeControls = true;
+config.enableProbeControls = 1;
 
 // Enable jsCut
 config.enableJsCut = true;
@@ -53,6 +53,6 @@ config.showUnitsBackdrop = false;
 // - Allow configuration of gcode for probing buttons
 
 // expects a webcam stream from mjpg_streamer
-//config.webcamPort = 8080;
+config.webcamPort = 8080;
 
 module.exports = config;
