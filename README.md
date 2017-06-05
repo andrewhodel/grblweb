@@ -40,6 +40,12 @@ https://github.com/grbl/grbl/wiki/Configuring-Grbl-v0.8
 http://onehossshay.wordpress.com/2011/08/21/grbl-how-it-works-and-other-thoughts/
 
 ## Installation
+node --version
+v0.10.32
+npm --version
+1.4.28
+
+I ran into errors with a base install of nodejs on ubuntu
 
 ```
 git clone https://github.com/andrewhodel/grblweb.git
