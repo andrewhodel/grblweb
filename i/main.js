@@ -1,4 +1,9 @@
 /*
+TODO: Auto-reconnect web sockets
+TODO: "Click" the "Jog Control" tab when the config reloads (just in case)
+*/
+
+/*
 
     GRBLWeb - a web based CNC controller for GRBL
     Copyright (C) 2015 Andrew Hodel
@@ -25,128 +30,32 @@
 
 */
 
+var lastUnitsOfMeasurement = '';
+var unitsBeforeProbe = '';
+var config = {};
+
 $(document).ready(function() {
-
-	// init vars for better controls
-	var isMouseDown = false;
-	var tsLast = Date.now();
-
-	// get dimensions for better controls
-	var betterWidth = $('#betterControls').width();
-	var betterHeight = $('#betterControls').height();
-	var bPointWidth = $('#betterControlsPoint').width();
-	var bPointHeight = $('#betterControlsPoint').height();
-
-	// track the control mouse position externally
-	var betterX = 0;
-	var betterY = 0;
-
-	// get the scale factor to reduce x and y to a resolution of -1 to 1
-	var xSf = 2/betterWidth;
-	var ySf = 2/betterHeight;
-
-	// center the control point
-	$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
-	$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
-
-	// on mousedown, set isMouseDown to true
-        $('#betterControls').mousedown(function(event) {
-		event.preventDefault();
-		isMouseDown = true;
-        });
-        document.getElementById('betterControls').addEventListener('touchstart', function(event) {
-		event.preventDefault();
-		isMouseDown = true;
-	}, false);
-
-	// on mouseup reset center point
-        $('#betterControls').mouseup(function(event) {
-		event.preventDefault();
-		isMouseDown = false;
-		$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
-		$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
-	});
-        document.getElementById('betterControls').addEventListener('touchend', function(event) {
-		event.preventDefault();
-		isMouseDown = false;
-		$('#betterControlsPoint').css('top', (betterHeight/2)-(bPointHeight/2) + 'px');
-		$('#betterControlsPoint').css('left', (betterWidth/2)-(bPointWidth/2) + 'px');
-	});
-
-	// loop for bettercontrol
-	setInterval(function() {
-		if (isMouseDown) {
-
-			var gcX = betterX-(betterWidth/2);
-			var gcY = betterY-(betterHeight/2);
-
-			// add the scale factors
-			gcX = xSf*gcX;
-			gcY = ySf*gcY;
-
-			// invert y axis because JS and CNC are opposite there
-			if (gcY < 0) {
-				gcY = Math.abs(gcY);
-			} else if (gcY > 0) {
-				gcY = -gcY;
-			}
-
-			// first get speed, calculated from the mean of abs(x) and abs(y)
-			//var fSpeed = (Math.abs(gcX)+Math.abs(gcY))/2;
-
-			// first get speed, calculated from the highest abs of x and y
-			if (Math.abs(gcX) > Math.abs(gcY)) {
-				var fSpeed = Math.abs(gcX)*$('#jogSpeed').val();
-			} else {
-				var fSpeed = Math.abs(gcY)*$('#jogSpeed').val();
-			}
-
-			fSpeed = Math.round(fSpeed*100)/100;
-
-			// set final position movements based on #jogSize
-			gcX = Math.round(gcX*$('#jogSize').val()*1000)/1000;
-			gcY = Math.round(gcY*$('#jogSize').val()*1000)/1000;
-
-			// gcode to send
-			socket.emit('gcodeLine', { line: 'G91\nG0 F'+fSpeed+' X'+gcX+' Y'+gcY+'\nG90\n'});
-		}
-	}, 200);
-
-	// on mousemove send gcode
-        $('#betterControls').mousemove(function(event) {
-		if (isMouseDown) {
-				betterX = event.pageX-this.offsetLeft;
-				betterY = event.pageY-this.offsetTop;
-
-				// move point
-				$('#betterControlsPoint').css('top',betterY-(bPointHeight/2) + 'px');
-				$('#betterControlsPoint').css('left',betterX-(bPointWidth/2) + 'px');
-
-		}
-        });
-        document.getElementById('betterControls').addEventListener('touchmove', function(event) {
-		event.preventDefault();
-		if (isMouseDown) {
-				betterX = event.pageX-this.offsetLeft;
-				betterY = event.pageY-this.offsetTop;
-
-				// move point
-				$('#betterControlsPoint').css('top',betterY-(bPointHeight/2) + 'px');
-				$('#betterControlsPoint').css('left',betterX-(bPointWidth/2) + 'px');
-
-		}
-        });
-
 	$( window ).resize(function() {
 		// when header resizes, move ui down
 		$('.table-layout').css('margin-top',$('.navbar-collapse').height()-34);
 	});
 
+	// Set up powertip and optional location
+	$('[data-powertip]').each(function() {
+		var opts = {};
+
+		if($(this).data('powertippos')!=undefined)
+			opts.placement = $(this).data('powertippos');
+
+		$(this).powerTip(opts);
+	});
+
 	var socket = io.connect('');
 
 	socket.on('serverError', function (data) {
-		alert(data);
+		console.log(data);
 	});
+
 
 	socket.on('gcodeFromJscut', function (data) {
 		$('#command').val(data.val);
@@ -154,48 +63,159 @@ $(document).ready(function() {
 		alert('new data from jscut');
 	});
 
+
 	// config from server
 	socket.on('config', function (data) {
+		console.log('config', data);
+		config = data;
+
 		if (data.showWebCam == true) {
 			// show the webcam and link
-
 			var webroot = window.location.protocol+'//'+window.location.hostname;
-			//console.log(webroot);
 
 			$('#wcImg').attr('src', webroot+':'+data.webcamPort+'/?action=stream');
-
 			$('#wcLink').attr('href', webroot+':'+data.webcamPort+'/javascript_simple.html');
-
 			$('#webcam').css('display','inline-block');
 		}
+
+		// Hide the jsCut button if jsCut is "disabled"
+		if(data.enableJsCut==0) {
+			$('#jsCutButton').hide();
+		}
+
+		// Show controls tabs to "enable" probe controls
+		if(data.enableProbeControls==1) {
+			$('#controlTabs').show();
+		}
+
+		// Hide "better controls" and show simple controls
+		if(data.enableSimpleControls==1) {
+			$('#betterControlsWrapper').hide();
+			$('#simpleControls').show();
+			$('#probeControls').hide();
+		}
+
+		// Fill in jog default step increment
+		if(data.jogControlDefaultIncr!=undefined)
+			$('#jogSize').val(data.jogControlDefaultIncr).attr('placeholder', data.jogControlDefaultIncr);
+
+		// Fill in jog default feed rate
+		if(data.jogControlDefaultFeed!=undefined)
+			$('#jogSpeed').val(data.jogControlDefaultFeed).attr('placeholder', data.jogControlDefaultFeed);
+
+		// Fill in default X offset for probe
+		if(data.probeControlXOffset!=undefined)
+			$('#probeOffsetX').val(data.probeControlXOffset).attr('placeholder', data.probeControlXOffset);
+
+		// Fill in default Y offset for probe
+		if(data.probeControlYOffset!=undefined)
+			$('#probeOffsetY').val(data.probeControlYOffset).attr('placeholder', data.probeControlYOffset);
+
+		// Fill in default Z offset for probe
+		if(data.probeControlZOffset!=undefined)
+			$('#probeOffsetZ').val(data.probeControlZOffset).attr('placeholder', data.probeControlZOffset);
+
+		// "Click" the "Jog Control" tab
+		$('#controlTabLink').click().parent().click();
 	});
 
+
 	socket.on('ports', function (data) {
-		//console.log('ports event',data);
 		$('#choosePort').html('<option val="no">Select a serial port</option>');
 		for (var i=0; i<data.length; i++) {
-			$('#choosePort').append('<option value="'+i+'">'+data[i].comName+':'+data[i].pnpId+'</option>');
+			var selected = '';
+
+			if(data[i].pnpId!=undefined && data[i].pnpId.toUpperCase().indexOf("ARDUINO_UNO")>=0)
+				selected = 'selected="selected"';
+
+			$('#choosePort').append('<option value="'+i+'" '+selected+'>'+data[i].comName+':'+data[i].pnpId+'</option>');
 		}
 		if (data.length == 1) {
 			$('#choosePort').val('0');
 			$('#choosePort').change();
 		}
+
+		$('#choosePort').change();
 	});
+
 
 	socket.on('qStatus', function (data) {
 		$('#qStatus').html(data.currentLength+'/'+data.currentMax);
+
+		var pct = Math.round((data.currentMax-data.currentLength)/data.currentMax*100);
+		if(isNaN(pct))
+			pct = 100;
+
+		if(data.currentMax==0)
+			pct = 0;
+
+		$('#queueProgress').attr('aria-valuenow', pct).width(pct+'%').text(pct+'%');
+
+		if(pct>0)
+			$('#queueProgress').addClass('active');
+		else
+			$('#queueProgress').removeClass('active');
 	});
 
+
 	socket.on('machineStatus', function (data) {
+		if(data.status.toUpperCase()=='ALARM') {
+			data.status = '<span style="color:red; font-weight:bold;">'+data.status+'</span>';
+		}
+
+		// $('#console').append('<p>'+JSON.stringify(data)+'</p>');
+		// data.status = '<span style="color:black; font-weight:bold;">'+data+'</span>';
+
 		$('#mStatus').html(data.status);
+
+		// Convert machine coordinates from mm to inches
+		if(data.unitsOfMeasurement=='in') {
+			for(var i in data) {
+				if(i.indexOf("pos")>=0) {
+					for(var j in data[i]) {
+						data[i][j] = (Math.round(parseFloat(data[i][j]/25.4) * 10000)/10000);;
+					}
+				}
+			}
+		}
+
 		$('#mX').html('X: '+data.mpos[0]);
 		$('#mY').html('Y: '+data.mpos[1]);
 		$('#mZ').html('Z: '+data.mpos[2]);
 		$('#wX').html('X: '+data.wpos[0]);
 		$('#wY').html('Y: '+data.wpos[1]);
 		$('#wZ').html('Z: '+data.wpos[2]);
-		//console.log(data);
+
+		// Only attempt to change things if the unit of measurement has changed
+		if(data.unitsOfMeasurement!=lastUnitsOfMeasurement) {
+			if (config.showUnitsBackdrop)
+				$('.unitsOfMeasurementText').text(data.unitsOfMeasurement);
+
+			// Values for jog options
+			var step_incr = parseFloat($('#jogSize').val());
+			var step_feed = parseFloat($('#jogSpeed').val());
+
+			if(data.unitsOfMeasurement.toUpperCase()=='IN') {
+				$('#setInches').addClass('btn-primary');
+				$('#setMillimeters').removeClass('btn-primary');
+
+				$('#jogSize').val(step_incr/25.4);
+				$('#jogSpeed').val(step_feed/25.4);
+			} else if(data.unitsOfMeasurement.toUpperCase()=='MM') {
+				$('#setInches').removeClass('btn-primary');
+				$('#setMillimeters').addClass('btn-primary');
+
+				// Don't do any conversion if this is the first page load
+				if(lastUnitsOfMeasurement!='') {
+					$('#jogSize').val(step_incr*25.4);
+					$('#jogSpeed').val(step_feed*25.4);
+				}
+			}
+
+			lastUnitsOfMeasurement = data.unitsOfMeasurement;
+		}
 	});
+
 
 	socket.on('serialRead', function (data) {
 		if ($('#console p').length > 300) {
@@ -205,6 +225,28 @@ $(document).ready(function() {
 		$('#console').append('<p>'+data.line+'</p>');
 		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
 	});
+
+
+	socket.on('sensors', function(data) {
+		if(config.enablePiTemperature==1) {
+			var tempHtml = '';
+
+			for(var i in data) {
+				if(config.piTemperatureFahrenheit==1) {
+					tempHtml += Math.round(parseFloat(data[i]) * 9/5 + 32)+'&deg;F,&nbsp;';
+				} else {
+					tempHtml += (Math.round(parseFloat(data[i]) * 100)/100) +'&deg;C,&nbsp;';
+				}
+			}
+
+			// Cut off the last ",&nbsp;"
+			tempHtml = tempHtml.trim();
+			tempHtml = tempHtml.substr(0, tempHtml.length-7);
+
+			$('#mTemp').html(tempHtml);
+		}
+	})
+
 
 	$('#choosePort').on('change', function() {
 		// select port
@@ -258,15 +300,140 @@ $(document).ready(function() {
 		$('#mPosition').hide();
 	});
 
-	$('#sendZero').on('click', function() {
+	$('#probeTabLink').on('click', function() {
+		$('#probeTab').addClass('active');
+		$('#controlTab').removeClass('active');
+		$('#probeControls').show();
+		$('#simpleControls').hide();
+	});
+
+	$('#controlTabLink').on('click', function() {
+		$('#controlTab').addClass('active');
+		$('#probeTab').removeClass('active');
+		$('#simpleControls').show();
+		$('#probeControls').hide();
+	});
+
+	$('#probeHomeZero').on('click', function() {
+		socket.emit('gcodeLine', { line: '$H' });
 		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
 	});
 
-	$('#sendCommand').on('click', function() {
+	$('#probeX').on('click', function() {
+		var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val()/2);
 
+		// Remember the units of measurement before we start the probe
+		unitsBeforeProbe = lastUnitsOfMeasurement;
+
+		socket.emit('gcodeLine', { line: 'G21' });							// Set to mm
+		socket.emit('gcodeLine', { line: 'G38.2 X-50 F20' });				// Probe X
+		socket.emit('gcodeLine', { line: 'G92 X'+(offsetX*-1) });			// Set X offset
+		socket.emit('gcodeLine', { line: 'G1 X'+(offsetX+2)+' F1000' });	// Move probe 2mm away from offset
+
+		// Restore the units of measurement after the probe
+		if(unitsBeforeProbe=='in')
+			socket.emit('gcodeLine', { line: 'G20' });
+	});
+
+	$('#probeY').on('click', function() {
+		var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val()/2);
+
+		// Remember the units of measurement before we start the probe
+		unitsBeforeProbe = lastUnitsOfMeasurement;
+
+		socket.emit('gcodeLine', { line: 'G21' });							// Set to mm
+		socket.emit('gcodeLine', { line: 'G38.2 Y-50 F20' });				// Probe Y
+		socket.emit('gcodeLine', { line: 'G92 Y'+(offsetY*-1) });				// Set Y offset
+		socket.emit('gcodeLine', { line: 'G1 Y'+(offsetY+2)+' F1000' });	// Move probe 2mm away from offset
+
+		// Restore the units of measurement after the probe
+		if(unitsBeforeProbe=='in')
+			socket.emit('gcodeLine', { line: 'G20' });
+	});
+
+	$('#probeZ').on('click', function() {
+		var offsetZ = parseFloat($('#probeOffsetZ').val());
+
+		// Remember the units of measurement before we start the probe
+		unitsBeforeProbe = lastUnitsOfMeasurement;
+
+		socket.emit('gcodeLine', { line: 'G21' });							// Set to mm
+		socket.emit('gcodeLine', { line: 'G38.2 Z-75 F20'});				// Probe Z
+		socket.emit('gcodeLine', { line: 'G92 Z'+offsetZ });				// Set Z offset
+		socket.emit('gcodeLine', { line: 'G1 Z'+(offsetZ+5)+' F1000' });	// Move probe 5mm away from offset
+
+		// Restore the units of measurement after the probe
+		if(unitsBeforeProbe=='in')
+			socket.emit('gcodeLine', { line: 'G20' });
+	});
+
+	$('#probeAll').on('click', function() {
+		var offsetX = parseFloat($('#probeOffsetX').val())+parseFloat($('#probeBitDiameter').val()/2)+10;
+		var offsetY = parseFloat($('#probeOffsetY').val())+parseFloat($('#probeBitDiameter').val()/2)+10;
+		var offsetZ = parseFloat($('#probeOffsetZ').val())+10;
+
+		$('#probeZ').click();	// Probe Z
+		$('#probeX').click();	// Probe X
+		$('#probeY').click();	// Probe Y
+
+		// Remember the units of measurement before we start the probe
+		unitsBeforeProbe = lastUnitsOfMeasurement;
+
+		socket.emit('gcodeLine', { line: 'G21' });
+		socket.emit('gcodeLine', { line: 'G1 X'+offsetX+' Y'+offsetY+' Z'+offsetZ+' F1000' });	// Move probe away from offset
+
+		// Restore the units of measurement after the probe
+		if(unitsBeforeProbe=='in')
+			socket.emit('gcodeLine', { line: 'G20' });
+	});
+
+	$('#gotoZeroZeroZero').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G1 X0 Y0 Z0 F500' });
+	});
+
+	$('#sendZero').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 X0 Y0 Z0' });
+		socket.emit('gcodeLine', { line: 'G28.1' });
+	});
+
+	$('#sendZeroX').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 X0' });
+		socket.emit('gcodeLine', { line: 'G28.1 X0' });
+	});
+
+	$('#sendZeroY').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 Y0' });
+		socket.emit('gcodeLine', { line: 'G28.1 Y0' });
+	});
+
+	$('#sendZeroZ').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G92 Z0' });
+		socket.emit('gcodeLine', { line: 'G28.1 Z0' });
+	});
+
+	$('#setInches').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G20' });
+	});
+
+	$('#setMillimeters').on('click', function() {
+		socket.emit('gcodeLine', { line: 'G21' });
+	});
+
+	$('#sendHome').on('click', function() {
+		socket.emit('gcodeLine', { line: '$H' });
+	});
+
+	$('#sendUnlock').on('click', function() {
+		socket.emit('gcodeLine', { line: '$X' });
+	});
+
+	$('#sendCommand').on('click', function() {
 		socket.emit('gcodeLine', { line: $('#command').val() });
 		$('#command').val('');
+	});
 
+	$('#refreshPorts').on('click', function() {
+		socket.emit('refreshPorts', {});
 	});
 
 	// shift enter for send command
@@ -285,73 +452,107 @@ $(document).ready(function() {
 	$('#xM').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X-'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#xP').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' X'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#yP').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#yM').on('click', function() {
 		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Y-'+$('#jogSize').val()+'\nG90'});
 	});
+
 	$('#zP').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z'+$('#jogSize').val()+'\nG90'});
+		var distance = parseFloat($('#jogSize').val());
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance*25.4
+
+		if(distance>=config.maxMoveZ)
+			distance = config.maxMoveZ;
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance/25.4;
+
+		// Throw a warning in the console
+		$('#console').append('<p><span style="color:red !important;font-weight:bold">!!!!: Only moved '+distance+lastUnitsOfMeasurement+' due to maxMoveZ safety limit</span></p>');
+		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
+
+		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z'+distance+'\nG90'});
 	});
+
 	$('#zM').on('click', function() {
-		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+$('#jogSize').val()+'\nG90'});
+		var distance = parseFloat($('#jogSize').val());
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance*25.4
+
+		if(distance>=config.maxMoveZ)
+			distance = config.maxMoveZ;
+
+		if(lastUnitsOfMeasurement=='in')
+			distance = distance/25.4;
+
+		// Throw a warning in the console
+		$('#console').append('<p><span style="color:red !important;font-weight:bold">!!!!: Only moved '+distance+lastUnitsOfMeasurement+' due to maxMoveZ safety limit</span></p>');
+		$('#console').scrollTop($("#console")[0].scrollHeight - $("#console").height());
+
+		socket.emit('gcodeLine', { line: 'G91\nG1 F'+$('#jogSpeed').val()+' Z-'+distance+'\nG90'});
 	});
 
 	// WASD and up/down keys
-	$(document).keydown(function (e) {
-		var keyCode = e.keyCode || e.which;
-
-		if ($('#command').is(':focus')) {
-			// don't handle keycodes inside command window
-			return;
-		}
-
-		switch (keyCode) {
-		case 65:
-			// a key X-
-			e.preventDefault();
-			$('#xM').click();
-			break;
-		case 68:
-			// d key X+
-			e.preventDefault();
-			$('#xP').click();
-			break;
-		case 87:
-			// w key Y+
-			e.preventDefault();
-			$('#yP').click();
-			break;
-		case 83:
-			// s key Y-
-			e.preventDefault();
-			$('#yM').click();
-			break;
-		case 38:
-			// up arrow Z+
-			e.preventDefault();
-			$('#zP').click();
-			break;
-		case 40:
-			// down arrow Z-
-			e.preventDefault();
-			$('#zM').click();
-			break;
-		}
-	});
+	// $(document).keydown(function (e) {
+	// 	var keyCode = e.keyCode || e.which;
+	//
+	// 	if ($('#command').is(':focus')) {
+	// 		// don't handle keycodes inside command window
+	// 		return;
+	// 	}
+	//
+	// 	switch (keyCode) {
+	// 	case 65:
+	// 		// a key X-
+	// 		e.preventDefault();
+	// 		$('#xM').click();
+	// 		break;
+	// 	case 68:
+	// 		// d key X+
+	// 		e.preventDefault();
+	// 		$('#xP').click();
+	// 		break;
+	// 	case 87:
+	// 		// w key Y+
+	// 		e.preventDefault();
+	// 		$('#yP').click();
+	// 		break;
+	// 	case 83:
+	// 		// s key Y-
+	// 		e.preventDefault();
+	// 		$('#yM').click();
+	// 		break;
+	// 	case 38:
+	// 		// up arrow Z+
+	// 		e.preventDefault();
+	// 		$('#zP').click();
+	// 		break;
+	// 	case 40:
+	// 		// down arrow Z-
+	// 		e.preventDefault();
+	// 		$('#zM').click();
+	// 		break;
+	// 	}
+	// });
 
 	// handle gcode uploads
 	if (window.FileReader) {
-
 		var reader = new FileReader ();
 
 		// drag and drop
 		function dragEvent (ev) {
-			ev.stopPropagation (); 
+			ev.stopPropagation ();
 			ev.preventDefault ();
 			if (ev.type == 'drop') {
 				reader.onloadend = function (ev) {
@@ -359,7 +560,7 @@ $(document).ready(function() {
 					openGCodeFromText();
 				};
 				reader.readAsText (ev.dataTransfer.files[0]);
-			}  
+			}
 		}
 
 		document.getElementById('command').addEventListener ('dragenter', dragEvent, false);
@@ -379,5 +580,4 @@ $(document).ready(function() {
 	} else {
 		alert('your browser is too old to upload files, get the latest Chromium or Firefox');
 	}
-
 });
