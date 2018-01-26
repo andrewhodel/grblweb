@@ -12,7 +12,12 @@ GCodeParser.prototype.parseLine = function(text, info) {
                 'cmd': cmd
             };
             tokens.splice(1).forEach(function(token) {
-                var key = token[0].toLowerCase();
+		try {
+                	var key = token[0].toLowerCase();
+		} catch (err) {
+			// if there's an error, it just means that toLowerCase cannot lowercase a space
+			var key = token[0];
+		}
                 var value = parseFloat(token.substring(1));
                 args[key] = value;
             });
@@ -28,7 +33,6 @@ GCodeParser.prototype.parse = function(gcode) {
     var lines = gcode.split('\n');
     for (var i = 0; i < lines.length; i++) {
         if (this.parseLine(lines[i], i) === false) {
-            console.log('hmm');
             break;
         }
     }

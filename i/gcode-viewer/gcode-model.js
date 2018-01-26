@@ -127,6 +127,15 @@ function createObjectFromGCode(gcode) {
             lastLine = newLine;
         },
 
+	// FIXME
+	// add g2/g3 controlled arcs
+	G2: function(args, line) {
+		console.log('G2 detected, unsupported to display but it will send it to the controller');
+	},
+	G3: function(args, line) {
+		console.log('G3 detected, unsupported to display but it will send it to the controller');
+	},
+
         G21: function(args) {
             // G21: Set Units to Millimeters
             // Example: G21
