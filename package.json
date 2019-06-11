@@ -2,7 +2,6 @@
   "name": "grblweb",
   "description": "web based gcode sender for grbl",
   "dependencies": {
-    "forever": "1.0.x",
     "node-static": "0.7.x",
     "serialport": "7.0.x",
     "socket.io": "2.2.x"
