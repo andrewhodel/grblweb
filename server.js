@@ -93,17 +93,19 @@ function ConvChar( str ) {
 var sp = [];
 var allPorts = [];
 
-serialport.list(function (err, ports) {
+serialport.list().then(function(ports) {
 
 	// if on rPi - http://www.hobbytronics.co.uk/raspberry-pi-serial-port
 
 	allPorts = ports;
 
+	//console.log(ports);
+
 	for (var i=0; i<ports.length; i++) {
 	!function outer(i){
 
 		sp[i] = {};
-		sp[i].port = ports[i].comName;
+		sp[i].port = ports[i].path;
 		sp[i].q = [];
 		sp[i].qCurrentMax = 0;
 		sp[i].lastSerialWrite = [];
@@ -111,7 +113,7 @@ serialport.list(function (err, ports) {
 		// read on the parser
 		sp[i].handle = new serialport.parsers.Readline({delimiter: '\r\n'});
 		// 1 means clear to send, 0 means waiting for response
-		sp[i].port = new serialport(ports[i].comName, {
+		sp[i].port = new serialport(ports[i].path, {
 			baudRate: config.serialBaudRate
 		});
 		// write on the port
