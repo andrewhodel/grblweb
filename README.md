@@ -4,7 +4,7 @@ GRBLWeb is a web based GCODE sender and controller for GRBL.  Multiple serial de
 
 More information can be found at http://xyzbots.com
 
-Copyright 2015 Andrew Hodel andrewhodel@gmail.com under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3
+Copyright 2021 Andrew Hodel andrewhodel@gmail.com under the GNU AFFERO GENERAL PUBLIC LICENSE Version 3
 
 You must share the source of your project and notify the original author via email in plain english if you include or use this code, even if it is included or used as a library on the web.
 
