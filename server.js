@@ -179,7 +179,7 @@ function serialData(data, port) {
 	if (data.indexOf('ok') == 0) {
 
 		// ok is green
-		emitToPortSockets(port, 'serialRead', {'line':'<span style="color: green;">RESP: '+data+'</span>'});
+		emitToPortSockets(port, 'consoleDisplay', {'line':'<span style="color: green;">RESP: '+data+'</span>'});
 
 		// run another line from the q
 		if (sp[port].q.length > 0) {
@@ -194,7 +194,7 @@ function serialData(data, port) {
 	} else if (data.indexOf('error') == 0) {
 
 		// error is red
-		emitToPortSockets(port, 'serialRead', {'line':'<span style="color: red;">RESP: '+data+'</span>'});
+		emitToPortSockets(port, 'consoleDisplay', {'line':'<span style="color: red;">RESP: '+data+'</span>'});
 
 		// run another line from the q
 		if (sp[port].q.length > 0) {
@@ -208,7 +208,7 @@ function serialData(data, port) {
 
 	} else {
 		// other is grey
-		emitToPortSockets(port, 'serialRead', {'line':'<span style="color: #888;">RESP: '+data+'</span>'});
+		emitToPortSockets(port, 'consoleDisplay', {'line':'<span style="color: #888;">RESP: '+data+'</span>'});
 	}
 
 	if (sp[port].q.length == 0) {
@@ -247,7 +247,7 @@ function sendFirstQ(port) {
 
 	// loop through all registered port clients
 	for (var i=0; i<sp[port].sockets.length; i++) {
-		sp[port].sockets[i].emit('serialRead', {'line':'<span style="color: black;">SEND: '+t+'</span>'+"\n"});
+		sp[port].sockets[i].emit('consoleDisplay', {'line':'<span style="color: black;">SEND: '+t+'</span>'+"\n"});
 	}
 	sp[port].port.write(t+"\n")
 	sp[port].lastSerialWrite.push(t);

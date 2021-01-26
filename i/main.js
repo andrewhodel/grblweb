@@ -197,7 +197,7 @@ $(document).ready(function() {
 		//console.log(data);
 	});
 
-	socket.on('serialRead', function (data) {
+	socket.on('consoleDisplay', function (data) {
 		if ($('#console p').length > 300) {
 			// remove oldest if already at 300 lines
 			$('#console p').first().remove();

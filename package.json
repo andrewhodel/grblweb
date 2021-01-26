@@ -3,7 +3,7 @@
   "description": "web based gcode sender for grbl",
   "dependencies": {
     "node-static": "0.7.x",
-    "serialport": "9.0.x",
+    "serialport": "^9.0.6",
     "socket.io": "2.4.x"
   }
 }
