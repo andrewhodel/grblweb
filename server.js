@@ -27,9 +27,9 @@
 
 var config = require('./config');
 var serialport = require("serialport");
-var app = require('http').createServer(handler)
-  , io = require('socket.io').listen(app)
-  , fs = require('fs');
+var socketio = require('socket.io');
+var fs = require('fs');
+var http = require('http');
 var static = require('node-static');
 var EventEmitter = require('events').EventEmitter;
 var url = require('url');
@@ -53,8 +53,11 @@ http.get('http://127.0.0.1:8080', function(res) {
 	console.log('Got error: '+e.message+' not enabling webcam')
 });
 
-app.listen(config.webPort);
+var httpServer = http.createServer(handler).listen(config.webPort);
+var io = new socketio.Server(httpServer, { /* options */ });
 var fileServer = new static.Server('./i');
+
+console.log('http server listening on port ' + config.webPort);
 
 function handler (req, res) {
 

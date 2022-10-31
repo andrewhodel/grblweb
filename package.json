@@ -4,6 +4,6 @@
   "dependencies": {
     "node-static": "0.7.x",
     "serialport": "^9.0.6",
-    "socket.io": "2.4.x"
+    "socket.io": "4.5.2"
   }
 }
