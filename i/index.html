@@ -107,6 +107,29 @@
     padding: 10px;
 }
 
+.display-table {
+    display: table;
+    width: 100%;
+    margin-bottom: 0px;
+}
+
+.display-row {
+    display: table-row;
+}
+
+.cell-320 {
+    width: 320px;
+    display: table-cell;
+    vertical-align: top;
+    padding-right: 10px;
+}
+
+.cell-stretch {
+    width: auto;
+    display: table-cell;
+    padding-right: 10px;
+}
+
 </style>
 
 </head>
@@ -234,32 +257,37 @@
 <pre id="console"></pre>
 <br />
 
-<div id="webcam" style="float; left; display: none;">
-<img id="wcImg" width="320" height="240" />
-<br />
-<a id="wcLink" target="_blank" href="#">Webcam</a>
-</div>
+<div class="display-table">
+ <div class="display-row">
+  <div id="webcam" class="cell-320" style="display: none;">
+   <img id="wcImg" width="320" height="240" />
+   <br />
+   <a id="wcLink" target="_blank" href="#">Webcam</a>
+  </div>
 
-<div style="float: right;">
-<textarea style="height: 300px; width: 500px; overflow: auto; border: 2px solid orange;" id="command"></textarea>
-</div>
-
-<div style="float: right; clear: both;">
-<span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Upload GCODE to upload it.</span>
+  <div id="gcode" class="cell-stretch">
+   <textarea style="height: 300px; width: 100%; overflow: auto; border: 2px solid orange;" id="command"></textarea>
+   <br>
+   <span style="font-style: italic;">Drag a .gcode or .nc file to the command box or click Upload GCODE to upload it.</span>
+  </div>
+ </div>
 </div>
 
 <div class="input-group" style="clear: both; width: 300px; float: right; text-align: right; margin-top: 10px;">
-<span class="input-group-btn">
-<button type="button" class="btn btn-default disabled" id="qStatus">0/0</button>
-<button type="button" class="btn btn-default" id="pause">Pause</button>
-<button type="button" class="btn btn-default disabled" id="clearQ">Clear Queue</button>
-</span>
-</div><!-- /input-group -->
+ <span class="input-group-btn">
+  <button type="button" class="btn btn-default disabled" id="qStatus">0/0</button>
+  <button type="button" class="btn btn-default" id="pause">Pause</button>
+  <button type="button" class="btn btn-default disabled" id="clearQ">Clear Queue</button>
+ </span>
+</div>
 
 <div style="clear: both; float: right; margin-top: 10px;">
-<span class="btn btn-default btn-file">Upload GCODE <input type="file" id="fileInput" /></span>
-<button type="button" class="btn btn-default" id="sendCommand">Send to CNC (shift+enter)</button>
+ <span class="btn btn-default btn-file">Upload GCODE <input type="file" id="fileInput" /></span>
+ <button type="button" class="btn btn-default" id="sendCommand">Send to CNC (shift+enter)</button>
 </div>
+</div>
+
+
 
           </div>
         </div>
