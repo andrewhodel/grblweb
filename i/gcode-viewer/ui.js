@@ -40,7 +40,7 @@ var three_dispose_of_all_children = function(object) {
 
 			// dispose object
 			// must be before removeFromParent() and removeFromParent() must be next in the main thread
-			this.three_dispose_object_3d(object.children[0]);
+			three_dispose_object_3d(object.children[0]);
 
 			// remove object
 			object.children[0].removeFromParent();
@@ -50,11 +50,11 @@ var three_dispose_of_all_children = function(object) {
 		} else {
 
 			// remove children
-			object_count += this.three_dispose_of_all_children(object.children[0]);
+			object_count += three_dispose_of_all_children(object.children[0]);
 
 			// dispose object
 			// must be before removeFromParent() and removeFromParent() must be next in the main thread
-			this.three_dispose_object_3d(object.children[0]);
+			three_dispose_object_3d(object.children[0]);
 
 			// remove object
 			object.children[0].removeFromParent();
