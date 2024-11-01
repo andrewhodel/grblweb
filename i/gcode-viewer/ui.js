@@ -31,7 +31,7 @@ function openGCodeFromText() {
     }
 }
 
-three_dispose_of_all_children(object) {
+var three_dispose_of_all_children = function(object) {
 
 	var object_count = 0;
 
@@ -67,7 +67,7 @@ three_dispose_of_all_children(object) {
 
 }
 
-three_dispose_object_3d(object) {
+var three_dispose_object_3d = function(object) {
 
 	object.traverse(obj => {
 
